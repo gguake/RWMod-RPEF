@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34701.34
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaceExt", "RaceExt.csproj", "{3319D926-649C-4D0C-A7BE-51BAB16D3BDE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3319D926-649C-4D0C-A7BE-51BAB16D3BDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3319D926-649C-4D0C-A7BE-51BAB16D3BDE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B5594BFB-983E-462D-BABF-FFC2B546E187}
+	EndGlobalSection
+EndGlobal

@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="Constraint\BackstoryConstraint.cs" />
     <Compile Include="Constraint\BeardConstraint.cs" />
+    <Compile Include="Constraint\GeneConstraint.cs" />
     <Compile Include="Constraint\HairConstraint.cs" />
     <Compile Include="Constraint\HeadTypeConstraint.cs" />
     <Compile Include="Constraint\HediffConstraint.cs" />
@@ -65,6 +66,7 @@
     <Compile Include="Constraint\ThoughtConstraint.cs" />
     <Compile Include="Constraint\XenotypeConstraint.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
+    <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
     <Compile Include="PawnKindExtension.cs" />
     <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

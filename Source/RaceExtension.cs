@@ -31,6 +31,18 @@ namespace RPEF
         }
     }
 
+    public class GeneOverride
+    {
+        public GeneDef geneDef;
+        public float weight;
+
+        public void LoadDataFromXmlCustom(XmlNode xmlRoot)
+        {
+            DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "geneDef", xmlRoot.Name);
+            weight = ParseHelper.FromString<float>(xmlRoot.FirstChild.Value);
+        }
+    }
+
     public class RaceExtension : DefModExtension
     {
         public Dictionary<ThoughtDef, ThoughtDef> ThoughtReplacer
@@ -46,6 +58,7 @@ namespace RPEF
             }
         }
         private Dictionary<ThoughtDef, ThoughtDef> _thoughtReplacerDict;
+        public List<ThoughtReplacer> thoughtReplacer;
 
         public Dictionary<PawnRelationDef, float> RelationChanceMultiplier
         {
@@ -60,11 +73,12 @@ namespace RPEF
             }
         }
         private Dictionary<PawnRelationDef, float> _relationChanceMultiplierDict;
+        public List<RelationChanceMultiplier> relationChanceMultiplier;
 
         public BodyTypeDef fixedMaleBodyType;
         public BodyTypeDef fixedFemaleBodyType;
 
-        public List<ThoughtReplacer> thoughtReplacer;
-        public List<RelationChanceMultiplier> relationChanceMultiplier;
+        public List<GeneOverride> melaninGeneOverrides;
+        public List<GeneOverride> hairColorGeneOverrides;
     }
 }

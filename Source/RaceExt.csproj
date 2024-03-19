@@ -68,6 +68,7 @@
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
     <Compile Include="PawnKindExtension.cs" />
+    <Compile Include="RaceExtMod.cs" />
     <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RaceExtension.cs" />

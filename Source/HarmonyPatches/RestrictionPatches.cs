@@ -5,9 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using UnityEngine;
 using Verse;
-using Verse.AI;
 
 namespace RPEF
 {
@@ -49,6 +47,8 @@ namespace RPEF
 
             harmony.Patch(AccessTools.Method(typeof(MemoryThoughtHandler), nameof(MemoryThoughtHandler.TryGainMemory), new Type[] { typeof(Thought_Memory), typeof(Pawn) }),
                 prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(MemoryThoughtHandler_TryGainMemory_Prefix)));
+
+            Log.Message($"[RaceExt] Restriction Patch Succeeded");
         }
 
         private static MethodInfo __Pawn_StoryTracker_TryGetRandomHeadFromSet_CanUseHeadType;

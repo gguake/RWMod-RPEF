@@ -112,26 +112,27 @@ namespace RPEF
 
         private static void PawnGenerator_GetBodyTypeFor_Postfix(ref BodyTypeDef __result, Pawn pawn)
         {
-            if (ModsConfig.BiotechActive && pawn.DevelopmentalStage.Juvenile()) { return; }
-
             var extension = pawn.def.GetModExtension<RaceExtension>();
             if (extension == null) { return; }
 
-            switch (pawn.gender)
+            if (pawn.DevelopmentalStage.Adult())
             {
-                case Gender.Male:
-                    if (extension.fixedMaleBodyType != null)
-                    {
-                        __result = extension.fixedMaleBodyType;
-                    }
-                    break;
+                switch (pawn.gender)
+                {
+                    case Gender.Male:
+                        if (extension.fixedMaleBodyType != null)
+                        {
+                            __result = extension.fixedMaleBodyType;
+                        }
+                        break;
 
-                case Gender.Female:
-                    if (extension.fixedFemaleBodyType != null)
-                    {
-                        __result = extension.fixedFemaleBodyType;
-                    }
-                    break;
+                    case Gender.Female:
+                        if (extension.fixedFemaleBodyType != null)
+                        {
+                            __result = extension.fixedFemaleBodyType;
+                        }
+                        break;
+                }
             }
         }
 

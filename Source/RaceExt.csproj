@@ -74,7 +74,9 @@
     <Compile Include="RaceExtension.cs" />
     <Compile Include="Constraint\DefConstraint.cs" />
     <Compile Include="Constraint\RaceConstraint.cs" />
-    <Compile Include="RenderNode\PawnRenderNodeWorker_LifeStageBodySizeOffset.cs" />
+    <Compile Include="RenderNode\PawnRenderNodeWorker_BodyTypeDrawData.cs" />
+    <Compile Include="RenderNode\PawnRenderNode_HairConstant.cs" />
+    <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

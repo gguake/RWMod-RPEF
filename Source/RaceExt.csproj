@@ -56,24 +56,24 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Constraint\BackstoryConstraint.cs" />
-    <Compile Include="Constraint\BeardConstraint.cs" />
-    <Compile Include="Constraint\GeneConstraint.cs" />
-    <Compile Include="Constraint\HairConstraint.cs" />
-    <Compile Include="Constraint\HeadTypeConstraint.cs" />
-    <Compile Include="Constraint\HediffConstraint.cs" />
-    <Compile Include="Constraint\TattooConstraint.cs" />
-    <Compile Include="Constraint\ThoughtConstraint.cs" />
-    <Compile Include="Constraint\XenotypeConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\BackstoryConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\BeardConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\GeneConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\HairConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\HeadTypeConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\HediffConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\TattooConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\ThoughtConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\XenotypeConstraint.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
-    <Compile Include="PawnKindExtension.cs" />
+    <Compile Include="ModExtensions\PawnKindExtension.cs" />
     <Compile Include="RaceExtMod.cs" />
     <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RaceExtension.cs" />
-    <Compile Include="Constraint\DefConstraint.cs" />
-    <Compile Include="Constraint\RaceConstraint.cs" />
+    <Compile Include="ModExtensions\RaceExtension.cs" />
+    <Compile Include="ModExtensions\Constraint\DefConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\RaceConstraint.cs" />
     <Compile Include="RenderNode\PawnRenderNodeWorker_BodyTypeDrawData.cs" />
     <Compile Include="RenderNode\PawnRenderNode_HairConstant.cs" />
     <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />

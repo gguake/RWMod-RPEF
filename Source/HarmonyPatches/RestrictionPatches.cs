@@ -48,6 +48,10 @@ namespace RPEF
             harmony.Patch(AccessTools.Method(typeof(MemoryThoughtHandler), nameof(MemoryThoughtHandler.TryGainMemory), new Type[] { typeof(Thought_Memory), typeof(Pawn) }),
                 prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(MemoryThoughtHandler_TryGainMemory_Prefix)));
 
+            harmony.Patch(
+                original: AccessTools.Method(typeof(ThoughtUtility), nameof(ThoughtUtility.ThoughtNullified)),
+                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(ThoughtUtility_ThoughtNullified_Postfix)));
+
             Log.Message($"[RaceExt] Restriction Patch Succeeded");
         }
 
@@ -286,6 +290,15 @@ namespace RPEF
             }
 
             return true;
+        }
+        private static void ThoughtUtility_ThoughtNullified_Postfix(ref bool __result, Pawn pawn, ThoughtDef def)
+        {
+            if (__result) { return; }
+
+            if (!def.IsAllowedFor(pawn) || !pawn.IsAllowedFor(def))
+            {
+                __result = true;
+            }
         }
     }
 }

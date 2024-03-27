@@ -59,6 +59,8 @@
   <ItemGroup>
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
+    <Compile Include="ModExtensions\Constraint\BodyTypeConstraint.cs" />
+    <Compile Include="ModExtensions\Hook\ApparelGraphicHook.cs" />
     <Compile Include="ModExtensions\Hook\PawnGeneratorKindHook.cs" />
     <Compile Include="ModExtensions\Hook\PawnGeneratorRaceHook.cs" />
     <Compile Include="ModExtensions\Constraint\BackstoryConstraint.cs" />
@@ -71,6 +73,7 @@
     <Compile Include="ModExtensions\Constraint\ThoughtConstraint.cs" />
     <Compile Include="ModExtensions\Constraint\XenotypeConstraint.cs" />
     <Compile Include="RaceExtMod.cs" />
+    <Compile Include="RenderNode\PawnRenderNodeWorker_BodyApparel.cs" />
     <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ModExtensions\RaceExtension.cs" />

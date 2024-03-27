@@ -43,6 +43,10 @@ namespace RPEF
                 harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GetBodyTypeFor)),
                     postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GetBodyTypeFor_Postfix)));
 
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(ApparelGraphicRecordGetter), nameof(ApparelGraphicRecordGetter.TryGetGraphicApparel)),
+                    prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(ApparelGraphicRecordGetter_TryGetGraphicApparel_Prefix)));
+
                 RestrictionPatches.Patch(harmony);
 
                 harmony.PatchAll();
@@ -162,6 +166,31 @@ namespace RPEF
                         break;
                 }
             }
+        }
+
+        private static bool ApparelGraphicRecordGetter_TryGetGraphicApparel_Prefix(Apparel apparel, ref BodyTypeDef bodyType)
+        {
+            var hook = apparel.def.GetModExtension<ApparelGraphicHook>();
+            if (hook == null) { return true; }
+
+            if (hook.bodyTypeGraphicOverride != null)
+            {
+                foreach (var v in hook.bodyTypeGraphicOverride)
+                {
+                    if (v.from == bodyType)
+                    {
+                        bodyType = v.to;
+                        return true;
+                    }
+                }
+            }
+
+            if (hook.defaultBodyTypeGraphicOverride != null)
+            {
+                bodyType = hook.defaultBodyTypeGraphicOverride;
+            }
+
+            return true;
         }
 
     }

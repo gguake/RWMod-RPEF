@@ -21,9 +21,6 @@ namespace RPEF
             harmony.Patch(AccessTools.Method(typeof(PawnStyleItemChooser), nameof(PawnStyleItemChooser.WantsToUseStyle)),
                 postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnStyleItemChooser_WantsToUseStyle_Postfix)));
 
-            harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GetBodyTypeFor)),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_GetBodyTypeFor_Postfix)));
-
             harmony.Patch(AccessTools.Method(typeof(ApparelProperties), nameof(ApparelProperties.PawnCanWear), new Type[] { typeof(Pawn), typeof(bool) }),
                 postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(ApparelProperties_PawnCanWear_Postfix)));
 
@@ -77,10 +74,7 @@ namespace RPEF
             {
                 if (head == null || ___pawn == null) { return; }
 
-                if (!head.IsAllowedFor(___pawn) || !___pawn.IsAllowedFor(head))
-                {
-                    __result = false;
-                }
+                __result = head.CheckAllConstraints(___pawn);
             }
         }
 
@@ -108,32 +102,6 @@ namespace RPEF
                         if (!beardDef.IsAllowedFor(pawn) || !pawn.IsAllowedFor(beardDef))
                         {
                             __result = false;
-                        }
-                        break;
-                }
-            }
-        }
-
-        private static void PawnGenerator_GetBodyTypeFor_Postfix(ref BodyTypeDef __result, Pawn pawn)
-        {
-            var extension = pawn.def.GetModExtension<RaceExtension>();
-            if (extension == null) { return; }
-
-            if (pawn.DevelopmentalStage.Adult())
-            {
-                switch (pawn.gender)
-                {
-                    case Gender.Male:
-                        if (extension.fixedMaleBodyType != null)
-                        {
-                            __result = extension.fixedMaleBodyType;
-                        }
-                        break;
-
-                    case Gender.Female:
-                        if (extension.fixedFemaleBodyType != null)
-                        {
-                            __result = extension.fixedFemaleBodyType;
                         }
                         break;
                 }

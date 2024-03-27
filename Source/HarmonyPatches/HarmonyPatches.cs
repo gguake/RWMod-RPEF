@@ -40,6 +40,9 @@ namespace RPEF
                 harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateGenes"),
                     prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GenerateGenes_Prefix)));
 
+                harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GetBodyTypeFor)),
+                    postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_GetBodyTypeFor_Postfix)));
+
                 RestrictionPatches.Patch(harmony);
 
                 harmony.PatchAll();
@@ -56,7 +59,7 @@ namespace RPEF
 
         private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request)
         {
-            List<(PawnKindDef kindDef, float weight)> kindDefCandidates = null;
+            List<(PawnKindDef kindDef, int weight)> kindDefCandidates = null;
 
             var originalKindDef = request.KindDef;
             foreach (var kindDef in DefDatabase<PawnKindDef>.AllDefsListForReading)
@@ -65,29 +68,26 @@ namespace RPEF
                 {
                     foreach (var extension in kindDef.modExtensions)
                     {
-                        if (extension is PawnKindExtension pawnKindReplaceExtension && pawnKindReplaceExtension.pawnKindReplacer != null)
+                        if (extension is PawnGeneratorKindHook hook && 
+                            hook.ReplaceHookInfos != null && 
+                            hook.ReplaceHookInfos.TryGetValue(originalKindDef, out var weight) &&
+                            weight > 0f)
                         {
-                            foreach (var pawnKindOverride in pawnKindReplaceExtension.pawnKindReplacer)
+                            if (kindDefCandidates == null)
                             {
-                                if (pawnKindOverride.targetKindDef == originalKindDef && pawnKindOverride.weight > 0f)
+                                kindDefCandidates = new List<(PawnKindDef kindDef, int weight)>()
                                 {
-                                    if (kindDefCandidates == null)
-                                    {
-                                        kindDefCandidates = new List<(PawnKindDef, float)>()
-                                    {
-                                        (originalKindDef, 1f)
-                                    };
-                                    }
-
-                                    kindDefCandidates.Add((kindDef, pawnKindOverride.weight));
-                                }
+                                    (originalKindDef, 10000),
+                                };
                             }
+
+                            kindDefCandidates.Add((kindDef, weight));
                         }
                     }
                 }
             }
 
-            if (kindDefCandidates != null)
+            if (kindDefCandidates != null && kindDefCandidates.Count > 1)
             {
                 var result = kindDefCandidates.RandomElementByWeight(v => v.weight).kindDef;
                 request.KindDef = result;
@@ -98,10 +98,10 @@ namespace RPEF
 
         private static void PawnRelationWorker_GenerationChance_Postfix(ref float __result, PawnRelationDef ___def, Pawn generated)
         {
-            var raceExtension = generated.def.GetModExtension<RaceExtension>();
-            if (raceExtension != null)
+            var pawnGenHook = generated.def.GetModExtension<PawnGeneratorRaceHook>();
+            if (pawnGenHook != null)
             {
-                if (raceExtension.RelationChanceMultiplier.TryGetValue(___def, out var multiplier))
+                if (pawnGenHook.RelationChanceMultiplier.TryGetValue(___def, out var multiplier))
                 {
                     __result *= multiplier;
                 }
@@ -112,21 +112,21 @@ namespace RPEF
         {
             if (pawn.genes != null)
             {
-                var raceExtension = pawn.def.GetModExtension<RaceExtension>();
-                if (raceExtension != null)
+                var pawnGenHook = pawn.def.GetModExtension<PawnGeneratorRaceHook>();
+                if (pawnGenHook != null)
                 {
-                    if (raceExtension.melaninGeneOverrides != null && raceExtension.melaninGeneOverrides.Count > 0)
+                    if (pawnGenHook.melaninGeneOverrides != null && pawnGenHook.melaninGeneOverrides.Count > 0)
                     {
-                        var melaninGeneDef = raceExtension.melaninGeneOverrides
+                        var melaninGeneDef = pawnGenHook.melaninGeneOverrides
                             .Where(v => v.geneDef.endogeneCategory == EndogeneCategory.Melanin)
                             .RandomElementByWeight(v => v.weight).geneDef;
 
                         pawn.genes.AddGene(melaninGeneDef, xenogene: false);
                     }
 
-                    if (raceExtension.hairColorGeneOverrides != null && raceExtension.hairColorGeneOverrides.Count > 0)
+                    if (pawnGenHook.hairColorGeneOverrides != null && pawnGenHook.hairColorGeneOverrides.Count > 0)
                     {
-                        var hairGeneDef = raceExtension.hairColorGeneOverrides
+                        var hairGeneDef = pawnGenHook.hairColorGeneOverrides
                             .Where(v => v.geneDef.endogeneCategory == EndogeneCategory.HairColor)
                             .RandomElementByWeight(v => v.weight).geneDef;
 
@@ -137,5 +137,32 @@ namespace RPEF
 
             return true;
         }
+
+        private static void PawnGenerator_GetBodyTypeFor_Postfix(ref BodyTypeDef __result, Pawn pawn)
+        {
+            var hook = pawn.def.GetModExtension<PawnGeneratorRaceHook>();
+            if (hook == null) { return; }
+
+            if (pawn.DevelopmentalStage.Adult())
+            {
+                switch (pawn.gender)
+                {
+                    case Gender.Male:
+                        if (hook.fixedMaleBodyType != null)
+                        {
+                            __result = hook.fixedMaleBodyType;
+                        }
+                        break;
+
+                    case Gender.Female:
+                        if (hook.fixedFemaleBodyType != null)
+                        {
+                            __result = hook.fixedFemaleBodyType;
+                        }
+                        break;
+                }
+            }
+        }
+
     }
 }

@@ -41,7 +41,7 @@ namespace RPEF
                     prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GenerateGenes_Prefix)));
 
                 harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GetBodyTypeFor)),
-                    postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_GetBodyTypeFor_Postfix)));
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GetBodyTypeFor_Postfix)));
 
                 RestrictionPatches.Patch(harmony);
 
@@ -49,7 +49,7 @@ namespace RPEF
 
                 Log.Message($"[RaceExt] Patch Completed");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 Log.Error("[RaceExt] Some error occured in patch process..");
                 throw;

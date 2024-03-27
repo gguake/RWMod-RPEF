@@ -82,29 +82,7 @@ namespace RPEF
         {
             if (__result)
             {
-                switch (styleItemDef)
-                {
-                    case HairDef hairDef:
-                        if (!hairDef.IsAllowedFor(pawn) || !pawn.IsAllowedFor(hairDef))
-                        {
-                            __result = false;
-                        }
-                        break;
-
-                    case TattooDef tattooDef:
-                        if (!tattooDef.IsAllowedFor(pawn) || !pawn.IsAllowedFor(tattooDef))
-                        {
-                            __result = false;
-                        }
-                        break;
-
-                    case BeardDef beardDef:
-                        if (!beardDef.IsAllowedFor(pawn) || !pawn.IsAllowedFor(beardDef))
-                        {
-                            __result = false;
-                        }
-                        break;
-                }
+                __result = styleItemDef.CheckAllConstraints(pawn);
             }
         }
 
@@ -126,7 +104,7 @@ namespace RPEF
                     }
                 }
 
-                if (thingDef != null && (!thingDef.IsAllowedFor(pawn) || !pawn.IsAllowedFor(thingDef)))
+                if (thingDef != null && !thingDef.CheckAllConstraints(pawn))
                 {
                     __result = false;
                     return;
@@ -140,7 +118,7 @@ namespace RPEF
             {
                 if (thing == null || pawn == null) { return; }
 
-                if (!thing.def.IsAllowedFor(pawn) || !pawn.IsAllowedFor(thing.def))
+                if (!thing.def.CheckAllConstraints(pawn))
                 {
                     __result = false;
                 }
@@ -152,29 +130,17 @@ namespace RPEF
             var keys = __result.Keys.ToList();
             foreach (var xenotype in keys)
             {
-                if (!xenotype.IsAllowedFor(kind.race))
+                if (!xenotype.CheckAllConstraints(kind.race))
                 {
                     __result.Remove(xenotype);
                     continue;
-                }
-
-                if (kind.race.modExtensions != null)
-                {
-                    foreach (var extension in kind.race.modExtensions)
-                    {
-                        if (extension is XenotypeConstraint constraint && !constraint.IsAllowedFor(xenotype))
-                        {
-                            __result.Remove(xenotype);
-                            break;
-                        }
-                    }
                 }
             }
         }
 
         private static List<BackstoryDef> RemoveNotCompatibleBackstories(List<BackstoryDef> backstoryDefs, Pawn pawn)
         {
-            backstoryDefs.RemoveAll(def => !def.IsAllowedFor(pawn) || !pawn.IsAllowedFor(def));
+            backstoryDefs.RemoveAll(def => !def.CheckAllConstraints(pawn));
             return backstoryDefs;
         }
 
@@ -201,10 +167,7 @@ namespace RPEF
         {
             if (hediff != null)
             {
-                if (!hediff.def.IsAllowedFor(___pawn) || !___pawn.IsAllowedFor(hediff.def))
-                {
-                    return false;
-                }
+                return hediff.def.CheckAllConstraints(___pawn);
             }
 
             return true;
@@ -212,7 +175,7 @@ namespace RPEF
 
         private static bool MemoryThoughtHandler_TryGainMemoryFast_Prefix_1(Pawn ___pawn, ref ThoughtDef mem)
         {
-            if (!mem.IsAllowedFor(___pawn) || !___pawn.IsAllowedFor(mem))
+            if (!mem.CheckAllConstraints(___pawn))
             {
                 return false;
             }
@@ -228,7 +191,7 @@ namespace RPEF
 
         private static bool MemoryThoughtHandler_TryGainMemoryFast_Prefix_2(Pawn ___pawn, ref ThoughtDef mem)
         {
-            if (!mem.IsAllowedFor(___pawn) || !___pawn.IsAllowedFor(mem))
+            if (!mem.CheckAllConstraints(___pawn))
             {
                 return false;
             }
@@ -244,7 +207,7 @@ namespace RPEF
 
         private static bool MemoryThoughtHandler_TryGainMemory_Prefix(MemoryThoughtHandler __instance, Pawn ___pawn, ref Thought_Memory newThought, Pawn otherPawn)
         {
-            if (!newThought.def.IsAllowedFor(___pawn) || !___pawn.IsAllowedFor(newThought.def))
+            if (!newThought.def.CheckAllConstraints(___pawn))
             {
                 return false;
             }
@@ -263,10 +226,7 @@ namespace RPEF
         {
             if (__result) { return; }
 
-            if (!def.IsAllowedFor(pawn) || !pawn.IsAllowedFor(def))
-            {
-                __result = true;
-            }
+            __result = !def.CheckAllConstraints(pawn);
         }
     }
 }

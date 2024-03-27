@@ -18,8 +18,6 @@ namespace RPEF
         }
     }
 
-
-
     public class RaceExtension : DefModExtension
     {
         public Dictionary<ThoughtDef, ThoughtDef> ThoughtReplacer

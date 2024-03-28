@@ -12,7 +12,7 @@ namespace RPEF
             {
                 for (int i = 0; i < def.modExtensions.Count; ++i)
                 {
-                    if (def.modExtensions[i] is Constraint constraint && (constraint.rule | rule) != ConstraintRuleFlag.None)
+                    if (def.modExtensions[i] is Constraint constraint && (constraint.rule & rule) != ConstraintRuleFlag.None)
                     {
                         yield return constraint;
                     }

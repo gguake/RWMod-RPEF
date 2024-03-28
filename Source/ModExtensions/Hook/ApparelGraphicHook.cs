@@ -10,6 +10,9 @@ namespace RPEF
         public BodyTypeDef to;
     }
 
+    /// <summary>
+    /// ThingDef
+    /// </summary>
     public class ApparelGraphicHook : DefModExtension
     {
         public BodyTypeDef defaultBodyTypeGraphicOverride;

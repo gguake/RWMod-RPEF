@@ -34,5 +34,7 @@ namespace RPEF
         }
         private Dictionary<ThoughtDef, ThoughtDef> _thoughtReplacerDict;
         public List<ThoughtReplacer> thoughtReplacer;
+
+        public List<int> growthMomentAgeOverride;
     }
 }

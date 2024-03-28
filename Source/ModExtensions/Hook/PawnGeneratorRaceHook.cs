@@ -40,6 +40,8 @@ namespace RPEF
         public BodyTypeDef fixedMaleBodyType;
         public BodyTypeDef fixedFemaleBodyType;
 
+        public float minAgeForAdulthood = -1f;
+
         public class GeneOverrideData
         {
             public GeneDef geneDef;
@@ -53,7 +55,5 @@ namespace RPEF
         }
         public List<GeneOverrideData> melaninGeneOverrides;
         public List<GeneOverrideData> hairColorGeneOverrides;
-
-
     }
 }

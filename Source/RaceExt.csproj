@@ -57,29 +57,35 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Comps\CompTrailRenderer.cs" />
+    <Compile Include="Comps\LineRendererManager.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
-    <Compile Include="ModExtensions\Constraint\BodyTypeConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\AppliedConstraintCache.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\BodyTypeConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\RecipeConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\TraitConstraint.cs" />
     <Compile Include="ModExtensions\Hook\ApparelGraphicHook.cs" />
     <Compile Include="ModExtensions\Hook\PawnGeneratorKindHook.cs" />
     <Compile Include="ModExtensions\Hook\PawnGeneratorRaceHook.cs" />
-    <Compile Include="ModExtensions\Constraint\BackstoryConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\BackstoryConstraint.cs" />
     <Compile Include="ModExtensions\Constraint\Constraint.cs" />
     <Compile Include="ModExtensions\Constraint\ConstraintExtension.cs" />
-    <Compile Include="ModExtensions\Constraint\HeadTypeConstraint.cs" />
-    <Compile Include="ModExtensions\Constraint\HediffConstraint.cs" />
-    <Compile Include="ModExtensions\Constraint\StyleItemConstraint.cs" />
-    <Compile Include="ModExtensions\Constraint\ThingConstraint.cs" />
-    <Compile Include="ModExtensions\Constraint\ThoughtConstraint.cs" />
-    <Compile Include="ModExtensions\Constraint\XenotypeConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\HeadTypeConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\HediffConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\StyleItemConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\ThingConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\ThoughtConstraint.cs" />
+    <Compile Include="ModExtensions\Constraint\Implementations\XenotypeConstraint.cs" />
+    <Compile Include="ModExtensions\Hook\RecipeBillHook.cs" />
     <Compile Include="RaceExtMod.cs" />
-    <Compile Include="RenderNode\PawnRenderNodeWorker_BodyApparel.cs" />
     <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ModExtensions\RaceExtension.cs" />
     <Compile Include="RenderNode\PawnRenderNodeWorker_BodyTypeDrawData.cs" />
     <Compile Include="RenderNode\PawnRenderNode_HairConstant.cs" />
     <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />
+    <Compile Include="ThinkNode\ThinkNode_ConditionalRace.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

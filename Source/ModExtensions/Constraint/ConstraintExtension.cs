@@ -1,55 +1,55 @@
-﻿using Verse;
+﻿using System.Collections.Generic;
+using Verse;
 
 namespace RPEF
 {
     public static class ConstraintExtension
     {
-        public static bool CheckAllConstraints(this Def def, Pawn pawn)
+        public static IEnumerable<Constraint> GetAllConstraintsOfDef(this Def def, ConstraintRuleFlag rule)
         {
-            if (def?.modExtensions != null)
+            if (def == null) { yield break; }
+            if (def.modExtensions != null)
             {
                 for (int i = 0; i < def.modExtensions.Count; ++i)
                 {
-                    if (def.modExtensions[i] is Constraint constraint && !constraint.Check(pawn))
+                    if (def.modExtensions[i] is Constraint constraint && (constraint.rule | rule) != ConstraintRuleFlag.None)
                     {
-                        return false;
+                        yield return constraint;
                     }
                 }
             }
+        }
 
-            if (pawn.def.modExtensions != null)
+        public static bool CheckAllConstraints(this Def def, Pawn pawn, out Constraint failedConstraint)
+        {
+            foreach (var constraint in GetAllConstraintsOfDef(def, ConstraintRuleFlag.OnApplyPawn))
             {
-                for (int i = 0; i < pawn.def.modExtensions.Count; ++i)
-                {
-                    if (pawn.def.modExtensions[i] is Constraint constraint && !constraint.Check(def))
-                    {
-                        return false;
-                    }
-                }
+                if (!constraint.Check(pawn)) { failedConstraint = constraint; return false; }
             }
 
+            foreach (var constraint in AppliedConstraintCache.Get(pawn))
+            {
+                if (!constraint.Check(def)) { failedConstraint = constraint; return false; }
+            }
+
+            failedConstraint = null;
             return true;
         }
-        public static bool CheckAllConstraints(this Def def, ThingDef pawnDef)
+
+        public static bool CheckAllConstraints(this Def def, ThingDef pawnDef, out Constraint failedConstraint)
         {
-            if (def.modExtensions == null) { return true; }
-
-            for (int i = 0; i < def.modExtensions.Count; ++i)
+            foreach (var constraint in GetAllConstraintsOfDef(def, ConstraintRuleFlag.OnApplyPawn))
             {
-                if (def.modExtensions[i] is Constraint constraint && !constraint.Check(pawnDef))
-                {
-                    return false;
-                }
+                if (!constraint.Check(pawnDef)) { failedConstraint = constraint; return false; }
             }
 
-            for (int i = 0; i < pawnDef.modExtensions.Count; ++i)
+            // Race
+            foreach (var constraint in pawnDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
             {
-                if (pawnDef.modExtensions[i] is Constraint constraint && !constraint.Check(def))
-                {
-                    return false;
-                }
+                if (!constraint.Check(def)) { failedConstraint = constraint; return false; }
             }
 
+            failedConstraint = null;
             return true;
         }
     }

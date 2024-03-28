@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Verse;
+using Verse.AI;
 
 namespace RPEF
 {
@@ -49,6 +50,18 @@ namespace RPEF
                 original: AccessTools.Method(typeof(ThoughtUtility), nameof(ThoughtUtility.ThoughtNullified)),
                 postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(ThoughtUtility_ThoughtNullified_Postfix)));
 
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Bill), nameof(Bill.PawnAllowedToStartAnew)),
+                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Bill_PawnAllowedToStartAnew_Postfix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateTraitsFor)),
+                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_GenerateTraitsFor_Transpiler)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(TraitSet), nameof(TraitSet.GainTrait)),
+                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(TraitSet_GainTrait_Prefix)));
+
             Log.Message($"[RaceExt] Restriction Patch Succeeded");
         }
 
@@ -74,7 +87,7 @@ namespace RPEF
             {
                 if (head == null || ___pawn == null) { return; }
 
-                __result = head.CheckAllConstraints(___pawn);
+                __result = head.CheckAllConstraints(___pawn, out _);
             }
         }
 
@@ -82,7 +95,7 @@ namespace RPEF
         {
             if (__result)
             {
-                __result = styleItemDef.CheckAllConstraints(pawn);
+                __result = styleItemDef.CheckAllConstraints(pawn, out _);
             }
         }
 
@@ -104,7 +117,7 @@ namespace RPEF
                     }
                 }
 
-                if (thingDef != null && !thingDef.CheckAllConstraints(pawn))
+                if (thingDef != null && !thingDef.CheckAllConstraints(pawn, out _))
                 {
                     __result = false;
                     return;
@@ -118,8 +131,13 @@ namespace RPEF
             {
                 if (thing == null || pawn == null) { return; }
 
-                if (!thing.def.CheckAllConstraints(pawn))
+                if (!thing.def.CheckAllConstraints(pawn, out var failedConstraint))
                 {
+                    if (failedConstraint.failReason?.Length > 0)
+                    {
+                        cantReason = failedConstraint.failReason;
+                    }
+
                     __result = false;
                 }
             }
@@ -130,7 +148,7 @@ namespace RPEF
             var keys = __result.Keys.ToList();
             foreach (var xenotype in keys)
             {
-                if (!xenotype.CheckAllConstraints(kind.race))
+                if (!xenotype.CheckAllConstraints(kind.race, out _))
                 {
                     __result.Remove(xenotype);
                     continue;
@@ -140,7 +158,7 @@ namespace RPEF
 
         private static List<BackstoryDef> RemoveNotCompatibleBackstories(List<BackstoryDef> backstoryDefs, Pawn pawn)
         {
-            backstoryDefs.RemoveAll(def => !def.CheckAllConstraints(pawn));
+            backstoryDefs.RemoveAll(def => !def.CheckAllConstraints(pawn, out _));
             return backstoryDefs;
         }
 
@@ -167,7 +185,7 @@ namespace RPEF
         {
             if (hediff != null)
             {
-                return hediff.def.CheckAllConstraints(___pawn);
+                return hediff.def.CheckAllConstraints(___pawn, out _);
             }
 
             return true;
@@ -175,7 +193,7 @@ namespace RPEF
 
         private static bool MemoryThoughtHandler_TryGainMemoryFast_Prefix_1(Pawn ___pawn, ref ThoughtDef mem)
         {
-            if (!mem.CheckAllConstraints(___pawn))
+            if (!mem.CheckAllConstraints(___pawn, out _))
             {
                 return false;
             }
@@ -191,7 +209,7 @@ namespace RPEF
 
         private static bool MemoryThoughtHandler_TryGainMemoryFast_Prefix_2(Pawn ___pawn, ref ThoughtDef mem)
         {
-            if (!mem.CheckAllConstraints(___pawn))
+            if (!mem.CheckAllConstraints(___pawn, out _))
             {
                 return false;
             }
@@ -207,7 +225,7 @@ namespace RPEF
 
         private static bool MemoryThoughtHandler_TryGainMemory_Prefix(MemoryThoughtHandler __instance, Pawn ___pawn, ref Thought_Memory newThought, Pawn otherPawn)
         {
-            if (!newThought.def.CheckAllConstraints(___pawn))
+            if (!newThought.def.CheckAllConstraints(___pawn, out _))
             {
                 return false;
             }
@@ -226,7 +244,63 @@ namespace RPEF
         {
             if (__result) { return; }
 
-            __result = !def.CheckAllConstraints(pawn);
+            __result = !def.CheckAllConstraints(pawn, out _);
+        }
+
+        private static void Bill_PawnAllowedToStartAnew_Postfix(ref bool __result, Bill __instance, Pawn p, RecipeDef ___recipe)
+        {
+            if (__result && p != null && ___recipe != null)
+            {
+                if (!___recipe.CheckAllConstraints(p, out var constraint))
+                {
+                    if (constraint.failReason?.Length > 0)
+                    {
+                        JobFailReason.Is(constraint.failReason, __instance.Label);
+                    }
+
+                    __result = false;
+                }
+            }
+        }
+
+        private static IEnumerable<TraitDef> FilterTraitCandidates(IEnumerable<TraitDef> traits, Pawn pawn)
+        {
+            return traits.Where(trait => trait.CheckAllConstraints(pawn, out _));
+        }
+        private static IEnumerable<CodeInstruction> PawnGenerator_GenerateTraitsFor_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var instructions = codeInstructions.ToList();
+
+            var index = instructions.FindIndex(
+                v =>
+                v.opcode == OpCodes.Call &&
+                v.OperandIs(AccessTools.PropertyGetter(typeof(DefDatabase<TraitDef>), "AllDefsListForReading")));
+
+            if (index >= 0)
+            {
+                instructions.InsertRange(index + 1, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RestrictionPatches), nameof(RestrictionPatches.FilterTraitCandidates))),
+                });
+            }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find injection point for PawnGenerator_GenerateTraitsFor_Transpiler");
+            }
+
+
+            return instructions;
+        }
+
+        private static bool TraitSet_GainTrait_Prefix(Pawn ___pawn, Trait trait)
+        {
+            if (!trait.def.CheckAllConstraints(___pawn, out _))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -3,6 +3,7 @@ using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using Verse;
 
 namespace RPEF
@@ -46,6 +47,24 @@ namespace RPEF
                 harmony.Patch(
                     original: AccessTools.Method(typeof(ApparelGraphicRecordGetter), nameof(ApparelGraphicRecordGetter.TryGetGraphicApparel)),
                     prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(ApparelGraphicRecordGetter_TryGetGraphicApparel_Prefix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(BillUtility), "MakeNewBill"),
+                    prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(BillUtility_MakeNewBill_Prefix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(PawnBioAndNameGenerator), "GiveShuffledBioTo"),
+                    transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_GiveShuffledBioTo_Transpiler)));
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(PawnBioAndNameGenerator), "TryGiveSolidBioTo"),
+                    transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_TryGiveSolidBioTo_Transpiler)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(Gizmo_GrowthTier), "GrowthTierTooltip"),
+                    transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Gizmo_GrowthTier_GrowthTierTooltip_Transpiler)));
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(Pawn_AgeTracker), nameof(Pawn_AgeTracker.TryChildGrowthMoment)),
+                    transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_AgeTracker_TryChildGrowthMoment_Transpiler)));
 
                 RestrictionPatches.Patch(harmony);
 
@@ -193,5 +212,165 @@ namespace RPEF
             return true;
         }
 
+
+        private static bool BillUtility_MakeNewBill_Prefix(ref Bill __result, RecipeDef recipe, Precept_ThingStyle precept)
+        {
+            var extension = recipe.GetModExtension<RecipeBillHook>();
+            if (extension == null) { return true; }
+
+            if (extension.billOverrideType != null)
+            {
+                if (!typeof(Bill).IsAssignableFrom(extension.billOverrideType))
+                {
+                    Log.Error($"invalid billtype for recipe mod extension");
+                    return true;
+                }
+
+                var bill = Activator.CreateInstance(extension.billOverrideType, new object[] { recipe, precept }) as Bill;
+                if (bill != null)
+                {
+                    __result = bill;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static float PawnBioAndNameGenerator_GiveShuffledBioTo_MinAdulthoodAgeInjection(float age, Pawn pawn)
+        {
+            var hook = pawn.def.GetModExtension<PawnGeneratorRaceHook>();
+            if (hook.minAgeForAdulthood >= 0f)
+            {
+                return hook.minAgeForAdulthood;
+            }
+
+            return age;
+        }
+        private static IEnumerable<CodeInstruction> PawnBioAndNameGenerator_GiveShuffledBioTo_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var instructions = codeInstructions.ToList();
+
+            var index = instructions.FindIndex(v => v.opcode == OpCodes.Ldc_R4 && v.OperandIs(20));
+            if (index >= 0)
+            {
+                instructions.InsertRange(index + 1, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_GiveShuffledBioTo_MinAdulthoodAgeInjection))),
+                });
+            }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find injection point for PawnBioAndNameGenerator_GiveShuffledBioTo_Transpiler");
+            }
+
+            return instructions;
+        }
+
+        private static float PawnBioAndNameGenerator_TryGiveSolidBioTo_MinAdulthoodAgeInjection(float age, Pawn pawn)
+        {
+            var hook = pawn.def.GetModExtension<PawnGeneratorRaceHook>();
+            if (hook != null && hook.minAgeForAdulthood >= 0f)
+            {
+                return hook.minAgeForAdulthood;
+            }
+
+            return age;
+        }
+        private static IEnumerable<CodeInstruction> PawnBioAndNameGenerator_TryGiveSolidBioTo_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var instructions = codeInstructions.ToList();
+
+            var index = instructions.FindIndex(v => v.opcode == OpCodes.Ldc_R4 && v.OperandIs(20));
+            if (index >= 0)
+            {
+                instructions.InsertRange(index + 1, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_TryGiveSolidBioTo_MinAdulthoodAgeInjection))),
+                });
+            }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find injection point for PawnBioAndNameGenerator_TryGiveSolidBioTo_Transpiler");
+            }
+
+            return instructions;
+        }
+
+        private static bool GrowthUtility_IsGrowthBirthday_Override(int age, Pawn pawn)
+        {
+            var extension = pawn.def.GetModExtension<RaceExtension>();
+            if (extension != null && extension.growthMomentAgeOverride != null)
+            {
+                for (int i = 0; i < extension.growthMomentAgeOverride.Count; i++)
+                {
+                    if (age == extension.growthMomentAgeOverride[i])
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return GrowthUtility.IsGrowthBirthday(age);
+        }
+        private static IEnumerable<CodeInstruction> Gizmo_GrowthTier_GrowthTierTooltip_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var instructions = codeInstructions.ToList();
+
+            var index = instructions.FindIndex(
+                v =>
+                v.opcode == OpCodes.Call &&
+                v.OperandIs(AccessTools.Method(typeof(GrowthUtility), nameof(GrowthUtility.IsGrowthBirthday))));
+
+            if (index >= 0)
+            {
+                instructions.InsertRange(index + 1, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Gizmo_GrowthTier), "child")),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(GrowthUtility_IsGrowthBirthday_Override))),
+                });
+
+                instructions.RemoveAt(index);
+            }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find injection point for Gizmo_GrowthTier_GrowthTierTooltip_Transpiler");
+            }
+
+            return instructions;
+        }
+
+        private static IEnumerable<CodeInstruction> Pawn_AgeTracker_TryChildGrowthMoment_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var instructions = codeInstructions.ToList();
+
+            var index = instructions.FindIndex(
+                v =>
+                v.opcode == OpCodes.Call &&
+                v.OperandIs(AccessTools.Method(typeof(GrowthUtility), nameof(GrowthUtility.IsGrowthBirthday))));
+
+            if (index >= 0)
+            {
+                instructions.InsertRange(index + 1, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_AgeTracker), "pawn")),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(GrowthUtility_IsGrowthBirthday_Override))),
+                });
+
+                instructions.RemoveAt(index);
+            }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find injection point for Pawn_AgeTracker_TryChildGrowthMoment_Transpiler");
+            }
+
+            return instructions;
+        }
     }
 }

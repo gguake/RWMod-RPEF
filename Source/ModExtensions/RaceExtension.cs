@@ -35,6 +35,9 @@ namespace RPEF
         private Dictionary<ThoughtDef, ThoughtDef> _thoughtReplacerDict;
         public List<ThoughtReplacer> thoughtReplacer;
 
+        public bool sterile;
+
         public List<int> growthMomentAgeOverride;
+        public SimpleCurve growthPointFactorCurve;
     }
 }

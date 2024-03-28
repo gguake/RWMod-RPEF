@@ -66,6 +66,14 @@ namespace RPEF
                     original: AccessTools.Method(typeof(Pawn_AgeTracker), nameof(Pawn_AgeTracker.TryChildGrowthMoment)),
                     transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_AgeTracker_TryChildGrowthMoment_Transpiler)));
 
+                harmony.Patch(
+                    original: AccessTools.PropertyGetter(typeof(Pawn_AgeTracker), "GrowthPointsFactor"),
+                    prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_AgeTracker_GrowthPointsFactor_Prefix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(Pawn), nameof(Pawn.Sterile)),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_Sterile_Postfix)));
+
                 RestrictionPatches.Patch(harmony);
 
                 harmony.PatchAll();
@@ -237,10 +245,10 @@ namespace RPEF
             return true;
         }
 
-        private static float PawnBioAndNameGenerator_GiveShuffledBioTo_MinAdulthoodAgeInjection(float age, Pawn pawn)
+        private static float PawnBioAndNameGenerator_MinAdulthoodAge_Getter_Injection(float age, Pawn pawn)
         {
             var hook = pawn.def.GetModExtension<PawnGeneratorRaceHook>();
-            if (hook.minAgeForAdulthood >= 0f)
+            if (hook != null && hook.minAgeForAdulthood >= 0f)
             {
                 return hook.minAgeForAdulthood;
             }
@@ -257,7 +265,7 @@ namespace RPEF
                 instructions.InsertRange(index + 1, new CodeInstruction[]
                 {
                     new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_GiveShuffledBioTo_MinAdulthoodAgeInjection))),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_MinAdulthoodAge_Getter_Injection))),
                 });
             }
             else
@@ -268,16 +276,6 @@ namespace RPEF
             return instructions;
         }
 
-        private static float PawnBioAndNameGenerator_TryGiveSolidBioTo_MinAdulthoodAgeInjection(float age, Pawn pawn)
-        {
-            var hook = pawn.def.GetModExtension<PawnGeneratorRaceHook>();
-            if (hook != null && hook.minAgeForAdulthood >= 0f)
-            {
-                return hook.minAgeForAdulthood;
-            }
-
-            return age;
-        }
         private static IEnumerable<CodeInstruction> PawnBioAndNameGenerator_TryGiveSolidBioTo_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
         {
             var instructions = codeInstructions.ToList();
@@ -288,7 +286,7 @@ namespace RPEF
                 instructions.InsertRange(index + 1, new CodeInstruction[]
                 {
                     new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_TryGiveSolidBioTo_MinAdulthoodAgeInjection))),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_MinAdulthoodAge_Getter_Injection))),
                 });
             }
             else
@@ -371,6 +369,30 @@ namespace RPEF
             }
 
             return instructions;
+        }
+
+        private static bool Pawn_AgeTracker_GrowthPointsFactor_Prefix(ref float __result, Pawn ___pawn)
+        {
+            var extension = ___pawn.def.GetModExtension<RaceExtension>();
+            if (extension != null && extension.growthPointFactorCurve != null)
+            {
+                __result = extension.growthPointFactorCurve.Evaluate(___pawn.ageTracker.AgeBiologicalYearsFloat);
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void Pawn_Sterile_Postfix(ref bool __result, Pawn __instance)
+        {
+            if (!__result)
+            {
+                var extension = __instance.def.GetModExtension<RaceExtension>();
+                if (extension != null && extension.sterile)
+                {
+                    __result = true;
+                }
+            }
         }
     }
 }

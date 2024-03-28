@@ -56,7 +56,7 @@ namespace RPEF
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateTraitsFor)),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_GenerateTraitsFor_Transpiler)));
+                transpiler: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_GenerateTraitsFor_Transpiler)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(TraitSet), nameof(TraitSet.GainTrait)),

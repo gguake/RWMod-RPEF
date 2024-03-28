@@ -64,26 +64,48 @@ namespace RPEF
                 }
             }
 
-            // Backstory
-            foreach (var constraint in pawn.story?.Childhood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+            if (pawn.story != null)
             {
-                yield return constraint;
-            }
-            foreach (var constraint in pawn.story?.Adulthood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
-            {
-                yield return constraint;
-            }
+                // Backstory
+                foreach (var constraint in pawn.story.Childhood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
+                foreach (var constraint in pawn.story.Adulthood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
 
-            // BodyType
-            foreach (var constraint in pawn.story?.bodyType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
-            {
-                yield return constraint;
-            }
+                // BodyType
+                foreach (var constraint in pawn.story.bodyType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
 
-            // HeadType
-            foreach (var constraint in pawn.story?.headType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
-            {
-                yield return constraint;
+                // HeadType
+                foreach (var constraint in pawn.story.headType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
+
+                // Hair
+                foreach (var constraint in pawn.story.hairDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
+
+                // Trait
+                var traits = pawn.story.traits?.allTraits;
+                if (traits != null && traits.Count > 0)
+                {
+                    foreach (var trait in traits)
+                    {
+                        foreach (var constraint in trait.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                        {
+                            yield return constraint;
+                        }
+                    }
+                }
             }
 
             // Hediff
@@ -99,26 +121,23 @@ namespace RPEF
                 }
             }
 
-            // Hair
-            foreach (var constraint in pawn.story?.hairDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+            if (pawn.style != null)
             {
-                yield return constraint;
-            }
+                // Beard
+                foreach (var constraint in pawn.style.beardDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
 
-            // Beard
-            foreach (var constraint in pawn.style?.beardDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
-            {
-                yield return constraint;
-            }
-
-            // Tattoo
-            foreach (var constraint in pawn.style?.FaceTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
-            {
-                yield return constraint;
-            }
-            foreach (var constraint in pawn.style?.BodyTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
-            {
-                yield return constraint;
+                // Tattoo
+                foreach (var constraint in pawn.style.FaceTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
+                foreach (var constraint in pawn.style.BodyTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
             }
 
             // Thought
@@ -134,23 +153,14 @@ namespace RPEF
                 }
             }
 
-            // Trait
-            var traits = pawn.story?.traits?.allTraits;
-            if (traits != null && traits.Count > 0)
-            {
-                foreach (var trait in traits)
-                {
-                    foreach (var constraint in trait.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
-                    {
-                        yield return constraint;
-                    }
-                }
-            }
 
             // Xenotype
-            foreach (var constraint in pawn.genes?.Xenotype.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+            if (pawn.genes != null)
             {
-                yield return constraint;
+                foreach (var constraint in pawn.genes.Xenotype.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+                {
+                    yield return constraint;
+                }
             }
         }
 

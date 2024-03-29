@@ -18,6 +18,16 @@ namespace RPEF
         }
     }
 
+    public class PawnRenderSubWorker_BodyTextureOverride : PawnRenderSubWorker
+    {
+
+
+        public override void EditMaterial(PawnRenderNode node, PawnDrawParms parms, ref Material material)
+        {
+
+        }
+    }
+
     public class PawnRenderNodeProperties_BodyOverride : PawnRenderNodeProperties
     {
         public List<BodyTextureOverride> dessicatedGraphicPathOverrides;

@@ -1,0 +1,9 @@
+D:\my\RWMod-RPEF\Mod\v1.5\Assemblies\RPEFMod.dll
+D:\my\RWMod-RPEF\Source\RPEF\obj\Release\RPEFMod.csproj.AssemblyReference.cache
+D:\my\RWMod-RPEF\Source\RPEF\obj\Release\RPEFMod.csproj.CoreCompileInputs.cache
+D:\my\RWMod-RPEF\Source\RPEF\obj\Release\RPEFMod.csproj.CopyComplete
+D:\my\RWMod-RPEF\Source\RPEF\obj\Release\RPEFMod.dll
+D:\my\RWMod-RPEF\Source\RPEFMod\obj\Release\RPEFMod.csproj.AssemblyReference.cache
+D:\my\RWMod-RPEF\Source\RPEFMod\obj\Release\RPEFMod.csproj.CoreCompileInputs.cache
+D:\my\RWMod-RPEF\Source\RPEFMod\obj\Release\RPEFMod.csproj.CopyComplete
+D:\my\RWMod-RPEF\Source\RPEFMod\obj\Release\RPEFMod.dll

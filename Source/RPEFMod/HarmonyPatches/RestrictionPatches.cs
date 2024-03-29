@@ -47,10 +47,6 @@ namespace RPEF
                 prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(MemoryThoughtHandler_TryGainMemory_Prefix)));
 
             harmony.Patch(
-                original: AccessTools.Method(typeof(ThoughtUtility), nameof(ThoughtUtility.ThoughtNullified)),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(ThoughtUtility_ThoughtNullified_Postfix)));
-
-            harmony.Patch(
                 original: AccessTools.Method(typeof(Bill), nameof(Bill.PawnAllowedToStartAnew)),
                 postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Bill_PawnAllowedToStartAnew_Postfix)));
 
@@ -239,12 +235,6 @@ namespace RPEF
             }
 
             return true;
-        }
-        private static void ThoughtUtility_ThoughtNullified_Postfix(ref bool __result, Pawn pawn, ThoughtDef def)
-        {
-            if (__result) { return; }
-
-            __result = !def.CheckAllConstraints(pawn, out _);
         }
 
         private static void Bill_PawnAllowedToStartAnew_Postfix(ref bool __result, Bill __instance, Pawn p, RecipeDef ___recipe)

@@ -153,7 +153,6 @@ namespace RPEF
                 }
             }
 
-
             // Xenotype
             if (pawn.genes != null)
             {

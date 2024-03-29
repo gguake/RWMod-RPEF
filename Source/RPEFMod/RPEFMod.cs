@@ -2,9 +2,9 @@
 
 namespace RPEF
 {
-    public class RaceExtMod : Mod
+    public class RPEFMod : Mod
     {
-        public RaceExtMod(ModContentPack content) : base(content)
+        public RPEFMod(ModContentPack content) : base(content)
         {
             HarmonyPatches.Patch();
         }

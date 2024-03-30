@@ -12,9 +12,12 @@
 *.opendb
 *.VC.db
 
-Source/obj
-Source/.vs
-Source/.idea
+Source/RPEF/obj
+Source/RPEF/.vs
+Source/RPEF/.idea
+Source/RPEFMod/obj
+Source/RPEFMod/.vs
+Source/RPEFMod/.idea
 
 Mod/rwconfigrc.json
 

@@ -1,10 +1,12 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using Verse;
+using Verse.AI;
 
 namespace RPEF
 {
@@ -73,6 +75,22 @@ namespace RPEF
                 harmony.Patch(
                     original: AccessTools.Method(typeof(Pawn), nameof(Pawn.Sterile)),
                     postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_Sterile_Postfix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(InteractionWorker_RomanceAttempt), nameof(InteractionWorker_RomanceAttempt.RandomSelectionWeight)),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(InteractionWorker_RomanceAttempt_RandomSelectionWeight_Postfix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(InteractionWorker_RomanceAttempt), nameof(InteractionWorker_RomanceAttempt.SuccessChance)),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(InteractionWorker_RomanceAttempt_SuccessChance_Postfix)));
+
+                harmony.Patch(
+                    original: AccessTools.PropertyGetter(typeof(Settlement), nameof(Settlement.MapGeneratorDef)),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Settlement_MapGeneratorDef_getter_Postfix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(Toils_Recipe), "CalculateIngredients"),
+                    postfix: new HarmonyMethod());
 
                 RestrictionPatches.Patch(harmony);
 
@@ -391,6 +409,48 @@ namespace RPEF
                 if (extension != null && extension.sterile)
                 {
                     __result = true;
+                }
+            }
+        }
+
+        private static void InteractionWorker_RomanceAttempt_RandomSelectionWeight_Postfix(Pawn initiator, ref float __result)
+        {
+            if (__result > 0f)
+            {
+                var extension = initiator.def.GetModExtension<RaceExtension>();
+                if (extension != null)
+                {
+                    __result *= extension.romanceFrequencyWeight;
+                }
+            }
+        }
+
+        private static void InteractionWorker_RomanceAttempt_SuccessChance_Postfix(Pawn initiator, Pawn recipient, ref float __result)
+        {
+            if (__result > 0f)
+            {
+                var initiatorExt = initiator.def.GetModExtension<RaceExtension>();
+                if (initiatorExt != null)
+                {
+                    __result *= initiatorExt.romanceSuccessChanceMultiplierAsInitiator;
+                }
+
+                var recipientExt = recipient.def.GetModExtension<RaceExtension>();
+                if (recipientExt != null)
+                {
+                    __result *= recipientExt.romanceSuccessChanceMultiplierAsRecipient;
+                }
+            }
+        }
+
+        private static void Settlement_MapGeneratorDef_getter_Postfix(ref MapGeneratorDef __result, Settlement __instance)
+        {
+            if (__instance.Faction != null)
+            {
+                var extension = __instance.Faction.def.GetModExtension<FactionSettlementHook>();
+                if (extension != null && extension.mapGeneratorDef != null)
+                {
+                    __result = extension.mapGeneratorDef;
                 }
             }
         }

@@ -68,6 +68,7 @@
     <Compile Include="ModExtensions\Hook\PawnGeneratorRaceHook.cs" />
     <Compile Include="Constraint\ConstraintExtension.cs" />
     <Compile Include="ModExtensions\Hook\RecipeBillHook.cs" />
+    <Compile Include="ModExtensions\Hook\FactionSettlementHook.cs" />
     <Compile Include="RenderNode\Apparel\PawnRenderNodeWorker_BodyApparelBase.cs" />
     <Compile Include="RenderNode\Apparel\PawnRenderNodeWorker_HeadApparelBase.cs" />
     <Compile Include="RenderNode\Apparel\PawnRenderNode_ApparelBase.cs" />

@@ -35,9 +35,13 @@ namespace RPEF
         private Dictionary<ThoughtDef, ThoughtDef> _thoughtReplacerDict;
         public List<ThoughtReplacer> thoughtReplacer;
 
-        public bool sterile;
+        public bool sterile = false;
 
         public List<int> growthMomentAgeOverride;
         public SimpleCurve growthPointFactorCurve;
+
+        public float romanceFrequencyWeight = 1f;
+        public float romanceSuccessChanceMultiplierAsInitiator = 1f;
+        public float romanceSuccessChanceMultiplierAsRecipient = 1f;
     }
 }

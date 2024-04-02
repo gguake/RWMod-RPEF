@@ -89,8 +89,8 @@ namespace RPEF
                     postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Settlement_MapGeneratorDef_getter_Postfix)));
 
                 harmony.Patch(
-                    original: AccessTools.Method(typeof(Toils_Recipe), "CalculateIngredients"),
-                    postfix: new HarmonyMethod());
+                    original: AccessTools.PropertyGetter(typeof(Dialog_ChooseNewWanderers), "DefaultStartingPawnRequest"),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Dialog_ChooseNewWanderers_DefaultStartingPawnRequest_getter_Postfix)));
 
                 RestrictionPatches.Patch(harmony);
 
@@ -452,6 +452,15 @@ namespace RPEF
                 {
                     __result = extension.mapGeneratorDef;
                 }
+            }
+        }
+
+        private static void Dialog_ChooseNewWanderers_DefaultStartingPawnRequest_getter_Postfix(ref PawnGenerationRequest __result)
+        {
+            var extension = Faction.OfPlayer.def.GetModExtension<FactionContinuePawnKindHook>();
+            if (extension != null && extension.continueMemberKindOverride != null)
+            {
+                __result.KindDef = extension.continueMemberKindOverride;
             }
         }
     }

@@ -24,8 +24,23 @@ namespace RPEF
         }
         private HashSet<HeadTypeDef> _headTypeDefCache;
         private List<HeadTypeDef> headTypes;
+        private bool? randomChosen;
 
-        protected override bool Match(HeadTypeDef def) => def != null && HeadTypeDefs.Contains(def);
+        protected override bool Match(HeadTypeDef def)
+        {
+            if (def != null)
+            {
+                if (HeadTypeDefs.Contains(def)) { return true; }
+
+                if (randomChosen.HasValue && randomChosen == def.randomChosen)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         protected override bool Match(Pawn pawn) => Match(pawn?.story?.headType);
     }
 }

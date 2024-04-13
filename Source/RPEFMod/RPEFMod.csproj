@@ -64,6 +64,7 @@
     <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
     <Compile Include="Constraint\AppliedConstraintCache.cs" />
     <Compile Include="ModExtensions\Hook\ApparelGraphicHook.cs" />
+    <Compile Include="ModExtensions\Hook\FactionContinuePawnKindHook.cs" />
     <Compile Include="ModExtensions\Hook\PawnGeneratorKindHook.cs" />
     <Compile Include="ModExtensions\Hook\PawnGeneratorRaceHook.cs" />
     <Compile Include="Constraint\ConstraintExtension.cs" />

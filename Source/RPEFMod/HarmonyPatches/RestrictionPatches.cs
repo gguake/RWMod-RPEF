@@ -243,11 +243,6 @@ namespace RPEF
             {
                 if (!___recipe.CheckAllConstraints(p, out var constraint))
                 {
-                    if (constraint.failReason?.Length > 0)
-                    {
-                        JobFailReason.Is(constraint.failReason, __instance.Label);
-                    }
-
                     __result = false;
                 }
             }

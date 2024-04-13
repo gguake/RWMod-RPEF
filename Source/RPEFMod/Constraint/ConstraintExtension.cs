@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Verse;
+using Verse.AI;
 
 namespace RPEF
 {
@@ -8,13 +9,16 @@ namespace RPEF
         public static IEnumerable<Constraint> GetAllConstraintsOfDef(this Def def, ConstraintRuleFlag rule)
         {
             if (def == null) { yield break; }
-            if (def.modExtensions != null)
+
+            var extension = def.GetModExtension<ConstraintModExtension>();
+            if (extension != null)
             {
-                for (int i = 0; i < def.modExtensions.Count; ++i)
+                var constraints = extension.def.constraints;
+                for (int i = 0; i < constraints.Count; ++i)
                 {
-                    if (def.modExtensions[i] is Constraint constraint && (constraint.rule & rule) != ConstraintRuleFlag.None)
+                    if ((constraints[i].rule & rule) != ConstraintRuleFlag.None)
                     {
-                        yield return constraint;
+                        yield return constraints[i];
                     }
                 }
             }
@@ -24,12 +28,30 @@ namespace RPEF
         {
             foreach (var constraint in GetAllConstraintsOfDef(def, ConstraintRuleFlag.OnApplyPawn))
             {
-                if (!constraint.Check(pawn)) { failedConstraint = constraint; return false; }
+                if (!constraint.Check(pawn))
+                {
+                    failedConstraint = constraint;
+                    if (failedConstraint.failReason != null)
+                    {
+                        JobFailReason.Is(failedConstraint.failReason);
+                    }
+
+                    return false;
+                }
             }
 
             foreach (var constraint in AppliedConstraintCache.Get(pawn))
             {
-                if (!constraint.Check(def)) { failedConstraint = constraint; return false; }
+                if (!constraint.Check(def)) 
+                {
+                    failedConstraint = constraint;
+                    if (failedConstraint.failReason != null)
+                    {
+                        JobFailReason.Is(failedConstraint.failReason);
+                    }
+
+                    return false;
+                }
             }
 
             failedConstraint = null;
@@ -40,13 +62,31 @@ namespace RPEF
         {
             foreach (var constraint in GetAllConstraintsOfDef(def, ConstraintRuleFlag.OnApplyPawn))
             {
-                if (!constraint.Check(pawnDef)) { failedConstraint = constraint; return false; }
+                if (!constraint.Check(pawnDef))
+                {
+                    failedConstraint = constraint;
+                    if (failedConstraint.failReason != null)
+                    {
+                        JobFailReason.Is(failedConstraint.failReason);
+                    }
+
+                    return false;
+                }
             }
 
             // Race
             foreach (var constraint in pawnDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
             {
-                if (!constraint.Check(def)) { failedConstraint = constraint; return false; }
+                if (!constraint.Check(def)) 
+                {
+                    failedConstraint = constraint;
+                    if (failedConstraint.failReason != null)
+                    {
+                        JobFailReason.Is(failedConstraint.failReason);
+                    }
+
+                    return false;
+                }
             }
 
             failedConstraint = null;

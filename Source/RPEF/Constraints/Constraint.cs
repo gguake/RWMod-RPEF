@@ -35,7 +35,7 @@ namespace RPEF
         Blacklist,
     }
 
-    public abstract class Constraint : DefModExtension
+    public abstract class Constraint
     {
         public ConstraintRuleFlag rule = ConstraintRuleFlag.OnApplyPawn;
         public ConstraintType type = ConstraintType.NoOp;

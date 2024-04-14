@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Verse;
 using Verse.AI;
+using static RimWorld.FoodUtility;
 
 namespace RPEF
 {
@@ -57,6 +58,10 @@ namespace RPEF
             harmony.Patch(
                 original: AccessTools.Method(typeof(TraitSet), nameof(TraitSet.GainTrait)),
                 prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(TraitSet_GainTrait_Prefix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(FoodUtility), nameof(FoodUtility.ThoughtsFromIngesting)),
+                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(FoodUtility_ThoughtsFromIngesting_Postfix)));
 
             Log.Message($"[RaceExt] Restriction Patch Succeeded");
         }
@@ -286,6 +291,19 @@ namespace RPEF
             }
 
             return true;
+        }
+
+        private static void FoodUtility_ThoughtsFromIngesting_Postfix(ref List<ThoughtFromIngesting> __result, Pawn ingester)
+        {
+            for (int i = 0; i < __result.Count; ++i)
+            {
+                var thought = __result[i].thought;
+                if (!thought.CheckAllConstraints(ingester, out _))
+                {
+                    __result.RemoveAt(i);
+                    i--;
+                }
+            }
         }
     }
 }

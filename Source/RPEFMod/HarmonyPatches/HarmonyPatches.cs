@@ -142,6 +142,12 @@ namespace RPEF
                 request.KindDef = result;
             }
 
+            var pawnGenHook = request.KindDef.race.GetModExtension<PawnGeneratorRaceHook>();
+            if (pawnGenHook != null && pawnGenHook.forcedXenotype != null)
+            {
+                request.ForcedXenotype = pawnGenHook.forcedXenotype;
+            }
+
             return true;
         }
 

@@ -55,5 +55,7 @@ namespace RPEF
         }
         public List<GeneOverrideData> melaninGeneOverrides;
         public List<GeneOverrideData> hairColorGeneOverrides;
+
+        public XenotypeDef forcedXenotype;
     }
 }

@@ -38,6 +38,9 @@ namespace RPEF
             harmony.Patch(AccessTools.Method(typeof(Pawn_HealthTracker), nameof(Pawn_HealthTracker.AddHediff), new Type[] { typeof(Hediff), typeof(BodyPartRecord), typeof(DamageInfo?), typeof(DamageWorker.DamageResult) }),
                 prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Pawn_HealthTracker_AddHediff_Prefix)));
 
+            harmony.Patch(AccessTools.Method(typeof(HediffGiverUtility), nameof(HediffGiverUtility.TryApply)),
+                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(HediffGiverUtility_TryApply_Prefix)));
+
             harmony.Patch(AccessTools.Method(typeof(MemoryThoughtHandler), nameof(MemoryThoughtHandler.TryGainMemoryFast), new Type[] { typeof(ThoughtDef), typeof(Precept) }),
                 prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(MemoryThoughtHandler_TryGainMemoryFast_Prefix_1)));
 
@@ -192,6 +195,20 @@ namespace RPEF
             return true;
         }
 
+        private static bool HediffGiverUtility_TryApply_Prefix(ref bool __result, Pawn pawn, HediffDef hediff)
+        {
+            if (pawn != null && hediff != null)
+            {
+                if (!hediff.CheckAllConstraints(pawn, out _))
+                {
+                    __result = false;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private static bool MemoryThoughtHandler_TryGainMemoryFast_Prefix_1(Pawn ___pawn, ref ThoughtDef mem)
         {
             if (!mem.CheckAllConstraints(___pawn, out _))
@@ -235,6 +252,8 @@ namespace RPEF
             if (extension != null && extension.ThoughtReplacer.TryGetValue(newThought.def, out var replacedThoughtDef))
             {
                 var replacedThought = ThoughtMaker.MakeThought(replacedThoughtDef, newThought.sourcePrecept);
+                replacedThought.SetForcedStage(newThought.CurStageIndex);
+
                 __instance.TryGainMemory(replacedThought, otherPawn);
                 return false;
             }

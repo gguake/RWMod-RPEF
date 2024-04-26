@@ -12,10 +12,11 @@ namespace RPEF
 {
     public static class HarmonyPatches
     {
+        private static Harmony harmony;
+
         public static void Patch()
         {
-            var harmony = new Harmony("rimworld.gguake.rpef");
-
+            harmony = new Harmony("rimworld.gguake.rpef");
             try
             {
                 harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GeneratePawn), new Type[] { typeof(PawnGenerationRequest) }),
@@ -93,17 +94,32 @@ namespace RPEF
                     postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Dialog_ChooseNewWanderers_DefaultStartingPawnRequest_getter_Postfix)));
 
                 RestrictionPatches.Patch(harmony);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+                Log.Error(e.StackTrace);
+                Log.Error("[RaceExt] Some error occured in patch process..");
+                throw;
+            }
+        }
+
+        public static void LazyPatch()
+        {
+            try
+            {
+                RestrictionPatches.LazyPatch(harmony);
 
                 harmony.PatchAll();
 
                 Log.Message($"[RaceExt] Patch Completed");
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Log.Error("[RaceExt] Some error occured in patch process..");
-                throw;
+                Log.Error(e.Message);
+                Log.Error(e.StackTrace);
+                Log.Error("[RaceExt] Some error occured in lazy patch process..");
             }
-
         }
 
         private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request)

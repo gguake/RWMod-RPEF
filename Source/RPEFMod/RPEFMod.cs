@@ -9,4 +9,13 @@ namespace RPEF
             HarmonyPatches.Patch();
         }
     }
+
+    [StaticConstructorOnStartup]
+    public static class RPEFLazyPatcher
+    {
+        static RPEFLazyPatcher()
+        {
+            HarmonyPatches.LazyPatch();
+        }
+    }
 }

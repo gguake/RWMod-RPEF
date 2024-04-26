@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Verse;
-using Verse.AI;
 using static RimWorld.FoodUtility;
 
 namespace RPEF
@@ -66,9 +65,36 @@ namespace RPEF
                 original: AccessTools.Method(typeof(FoodUtility), nameof(FoodUtility.ThoughtsFromIngesting)),
                 postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(FoodUtility_ThoughtsFromIngesting_Postfix)));
 
+        }
+
+        public static void LazyPatch(Harmony harmony)
+        {
+            harmony.Patch(
+                original: AccessTools.Method(typeof(PawnApparelGenerator), "CanUsePair"),
+                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnApparelGenerator_CanUsePair_Postfix)));
+
+            {
+                foreach (var subClass in typeof(PawnApparelGenerator).GetNestedType("PossibleApparelSet", BindingFlags.NonPublic).GetNestedTypes(BindingFlags.NonPublic))
+                {
+                    foreach (var method in subClass.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance).AsParallel())
+                    {
+                        var name = method.Name;
+                        if (name.Contains("HatPairValidator"))
+                        {
+                            harmony.Patch(original: method, postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnApparelGenerator_PossibleApparelSet_Validator_Postfix)));
+                        }
+                        else if (name.Contains("ParkaPairValidator"))
+                        {
+                            harmony.Patch(original: method, postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnApparelGenerator_PossibleApparelSet_Validator_Postfix)));
+                        }
+                    }
+                }
+            }
+
             Log.Message($"[RaceExt] Restriction Patch Succeeded");
         }
 
+        #region EarlyPatch
         private static MethodInfo __Pawn_StoryTracker_TryGetRandomHeadFromSet_CanUseHeadType;
         private static IEnumerable<CodeInstruction> Pawn_StoryTracker_TryGetRandomHeadFromSet_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -324,5 +350,30 @@ namespace RPEF
                 }
             }
         }
+        #endregion
+
+        #region LazyPatch
+        private static void PawnApparelGenerator_CanUsePair_Postfix(ref bool __result, ThingStuffPair pair, Pawn pawn)
+        {
+            if (__result)
+            {
+                if (!pair.thing.CheckAllConstraints(pawn, out _))
+                {
+                    __result = false;
+                }
+            }
+        }
+
+        private static void PawnApparelGenerator_PossibleApparelSet_Validator_Postfix(ref bool __result, Pawn ___pawn, ThingStuffPair pa)
+        {
+            if (__result)
+            {
+                if (!pa.thing.CheckAllConstraints(___pawn, out _))
+                {
+                    __result = false;
+                }
+            }
+        }
+        #endregion
     }
 }

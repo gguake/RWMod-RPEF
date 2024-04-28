@@ -65,6 +65,13 @@ namespace RPEF
                 original: AccessTools.Method(typeof(FoodUtility), nameof(FoodUtility.ThoughtsFromIngesting)),
                 postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(FoodUtility_ThoughtsFromIngesting_Postfix)));
 
+            harmony.Patch(
+                original: AccessTools.Method(typeof(CharacterCardUtility), "SetupGenerationRequest"),
+                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(CharacterCardUtility_SetupGenerationRequest_Prefix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(CharacterCardUtility), "LifestageAndXenotypeOptions"),
+                transpiler: new HarmonyMethod(typeof(RestrictionPatches), nameof(CharacterCardUtility_LifestageAndXenotypeOptions_Transpiler)));
         }
 
         public static void LazyPatch(Harmony harmony)
@@ -349,6 +356,50 @@ namespace RPEF
                     i--;
                 }
             }
+        }
+
+        private static bool CharacterCardUtility_SetupGenerationRequest_Prefix(int index, List<XenotypeDef> allowedXenotypes)
+        {
+            if (allowedXenotypes != null && allowedXenotypes.Count > 0)
+            {
+                allowedXenotypes.RemoveAll(xenotype => !xenotype.CheckAllConstraints(StartingPawnUtility.GetGenerationRequest(index).KindDef.race, out _));
+
+                if (allowedXenotypes.Empty())
+                {
+                    allowedXenotypes.Add(XenotypeDefOf.Baseliner);
+                }
+            }
+
+            return true;
+        }
+
+        private static IEnumerable<XenotypeDef> CharacterCardUtility_LifestageAndXenotypeOptions_Injection(IEnumerable<XenotypeDef> xenotypeDefs, Pawn pawn)
+        {
+            foreach (var xenotypeDef in xenotypeDefs)
+            {
+                if (pawn != null)
+                {
+                    if (!xenotypeDef.CheckAllConstraints(pawn.kindDef.race, out _))
+                    {
+                        continue;
+                    }
+                }
+
+                yield return xenotypeDef;
+            }
+        }
+        private static IEnumerable<CodeInstruction> CharacterCardUtility_LifestageAndXenotypeOptions_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var codeInstructions = instructions.ToList();
+
+            var index = codeInstructions.FindIndex(v => v.opcode == OpCodes.Call && v.OperandIs(AccessTools.PropertyGetter(typeof(DefDatabase<XenotypeDef>), "AllDefs"))) + 1;
+            codeInstructions.InsertRange(index, new CodeInstruction[]
+            {
+                new CodeInstruction(OpCodes.Ldarg_0),
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RestrictionPatches), nameof(RestrictionPatches.CharacterCardUtility_LifestageAndXenotypeOptions_Injection)))
+            });
+
+            return codeInstructions;
         }
         #endregion
 

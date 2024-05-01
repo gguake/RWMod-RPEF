@@ -53,6 +53,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Comps\CompTrailRenderer.cs" />
+    <Compile Include="Comps\LineRendererManager.cs" />
     <Compile Include="Constraints\Constraint.cs" />
     <Compile Include="Constraints\ConstraintDef.cs" />
     <Compile Include="Constraints\Implementations\BackstoryConstraint.cs" />
@@ -65,9 +67,31 @@
     <Compile Include="Constraints\Implementations\ThoughtConstraint.cs" />
     <Compile Include="Constraints\Implementations\TraitConstraint.cs" />
     <Compile Include="Constraints\Implementations\XenotypeConstraint.cs" />
+    <Compile Include="Constraint\AppliedConstraintCache.cs" />
+    <Compile Include="Constraint\ConstraintExtension.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
+    <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
+    <Compile Include="ModExtensions\Hook\ApparelGraphicHook.cs" />
+    <Compile Include="ModExtensions\Hook\FactionContinuePawnKindHook.cs" />
+    <Compile Include="ModExtensions\Hook\FactionSettlementHook.cs" />
+    <Compile Include="ModExtensions\Hook\PawnGeneratorKindHook.cs" />
+    <Compile Include="ModExtensions\Hook\PawnGeneratorRaceHook.cs" />
+    <Compile Include="ModExtensions\Hook\RecipeBillHook.cs" />
+    <Compile Include="ModExtensions\RaceExtension.cs" />
     <Compile Include="PawnRenderSubWorkerGeneratorInfo.cs" />
     <Compile Include="PawnRenderSubWorkers\PawnRenderSubWorker_DrawByDevelopmentStage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RenderNode\Apparel\PawnRenderNodeWorker_BodyApparelBase.cs" />
+    <Compile Include="RenderNode\Apparel\PawnRenderNodeWorker_HeadApparelBase.cs" />
+    <Compile Include="RenderNode\Apparel\PawnRenderNode_ApparelBase.cs" />
+    <Compile Include="RenderNode\Apparel\PawnRenderNode_BodyApparelBase.cs" />
+    <Compile Include="RenderNode\Apparel\PawnRenderNode_HeadApparelBase.cs" />
+    <Compile Include="RenderNode\PawnRenderNodeWorker_BodyTypeDrawData.cs" />
+    <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
+    <Compile Include="RenderNode\PawnRenderNode_HairConstant.cs" />
+    <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />
+    <Compile Include="RPEFMod.cs" />
+    <Compile Include="ThinkNode\ThinkNode_ConditionalRace.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

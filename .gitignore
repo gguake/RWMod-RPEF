@@ -11,13 +11,12 @@
 *.mdb
 *.opendb
 *.VC.db
+*.cache
 
-Source/RPEF/obj
+Source/RPEF/obj/
+Source/RPEF/obj/Release/
 Source/RPEF/.vs
 Source/RPEF/.idea
-Source/RPEFMod/obj
-Source/RPEFMod/.vs
-Source/RPEFMod/.idea
 
 Mod/rwconfigrc.json
 

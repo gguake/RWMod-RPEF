@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Xml;
 using Verse;
 using Verse.AI;
 
@@ -92,6 +93,10 @@ namespace RPEF
                 harmony.Patch(
                     original: AccessTools.PropertyGetter(typeof(Dialog_ChooseNewWanderers), "DefaultStartingPawnRequest"),
                     postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Dialog_ChooseNewWanderers_DefaultStartingPawnRequest_getter_Postfix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(XmlInheritance), "ResolveXmlNodesRecursively"),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(XmlInheritance_ResolveXmlNodesRecursively_Postfix)));
 
                 RestrictionPatches.Patch(harmony);
             }
@@ -484,6 +489,17 @@ namespace RPEF
             {
                 __result.KindDef = extension.continueMemberKindOverride;
             }
+        }
+
+        private static void XmlInheritance_ResolveXmlNodesRecursively_Postfix(object node)
+        {
+            var type = node.GetType();
+            var xmlNode = type.GetField("xmlNode").GetValue(node) as XmlNode;
+            var resolvedXmlNode = type.GetField("resolvedXmlNode").GetValue(node) as XmlNode;
+
+            if (xmlNode.Name.EndsWith("Def")) { return; }
+
+            Log.Message($"{xmlNode.Name} {resolvedXmlNode.Name}");
         }
     }
 }

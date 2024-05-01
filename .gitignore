@@ -13,6 +13,10 @@
 *.VC.db
 *.cache
 
+*/**/bin/Debug
+*/**/bin/Release
+*/**/obj/Debug
+*/**/obj/Release
 Source/RPEF/obj/
 Source/RPEF/obj/Release/
 Source/RPEF/.vs

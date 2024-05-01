@@ -3,6 +3,7 @@ using RimWorld;
 using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Xml;
@@ -95,8 +96,8 @@ namespace RPEF
                     postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Dialog_ChooseNewWanderers_DefaultStartingPawnRequest_getter_Postfix)));
 
                 harmony.Patch(
-                    original: AccessTools.Method(typeof(XmlInheritance), "ResolveXmlNodesRecursively"),
-                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(XmlInheritance_ResolveXmlNodesRecursively_Postfix)));
+                    original: AccessTools.Method(typeof(XmlInheritance), nameof(XmlInheritance.TryRegister)),
+                    prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(XmlInheritance_TryRegister_Prefix)));
 
                 RestrictionPatches.Patch(harmony);
             }
@@ -491,15 +492,60 @@ namespace RPEF
             }
         }
 
-        private static void XmlInheritance_ResolveXmlNodesRecursively_Postfix(object node)
+        private static void XmlInheritance_TryRegister_Prefix(XmlNode node, ModContentPack mod)
         {
-            var type = node.GetType();
-            var xmlNode = type.GetField("xmlNode").GetValue(node) as XmlNode;
-            var resolvedXmlNode = type.GetField("resolvedXmlNode").GetValue(node) as XmlNode;
+            if (node.Attributes?.Count > 0)
+            {
+                for (int i = 0; i < node.Attributes.Count; i++)
+                {
+                    var attr = node.Attributes[i];
+                    if (attr.Name == "HasImport" && attr.Value.ToLower() == "true")
+                    {
+                        ProcessImportingNodesRecursively(node);
+                        break;
+                    }
+                }
+            }
+        }
 
-            if (xmlNode.Name.EndsWith("Def")) { return; }
+        private static void ProcessImportingNodesRecursively(XmlNode node)
+        {
+            if (node == null) { return; }
 
-            Log.Message($"{xmlNode.Name} {resolvedXmlNode.Name}");
+            if (node.Attributes?.Count > 0)
+            {
+                for (int i = 0; i < node.Attributes.Count; i++)
+                {
+                    var attr = node.Attributes[i];
+                    if (attr.Name == "ImportPath")
+                    {
+                        var document = node.OwnerDocument;
+                        if (document == null) { continue; }
+
+                        var xpath = attr.Value;
+                        var selected = document.SelectNodes(attr.Value);
+                        if (selected != null || selected.Count > 0)
+                        {
+                            for (int j = 0; j < selected.Count; ++j)
+                            {
+                                node.InnerXml += selected[j].InnerXml;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (node.ChildNodes?.Count > 0)
+            {
+                for (int i = 0; i < node.ChildNodes.Count; ++i)
+                {
+                    var child = node.ChildNodes[i];
+                    if (child.NodeType == XmlNodeType.Element)
+                    {
+                        ProcessImportingNodesRecursively(child);
+                    }
+                }
+            }
         }
     }
 }

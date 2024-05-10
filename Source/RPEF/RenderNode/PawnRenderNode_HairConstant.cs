@@ -11,12 +11,17 @@ namespace RPEF
 
         public override Graphic GraphicFor(Pawn pawn)
         {
-            if (pawn.story?.hairDef == null || pawn.story.hairDef.noGraphic)
+            if (pawn.DevelopmentalStage.Baby() || pawn.DevelopmentalStage.Newborn())
             {
-                return null;
+                if (pawn.story?.hairDef == null || pawn.story.hairDef.noGraphic)
+                {
+                    return null;
+                }
+
+                return pawn.story.hairDef.GraphicFor(pawn, ColorFor(pawn));
             }
 
-            return pawn.story.hairDef.GraphicFor(pawn, ColorFor(pawn));
+            return base.GraphicFor(pawn);
         }
     }
 }

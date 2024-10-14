@@ -1,7 +1,0 @@
-D:\my\RWMod-RPEF\Mod\v1.5\Assemblies\RPEF.dll
-D:\my\RWMod-RPEF\Source\RPEFCore\obj\Release\RPEF.csproj.AssemblyReference.cache
-D:\my\RWMod-RPEF\Source\RPEFCore\obj\Release\RPEF.csproj.CoreCompileInputs.cache
-D:\my\RWMod-RPEF\Source\RPEFCore\obj\Release\RPEF.dll
-D:\my\RWMod-RPEF\Source\RPEF\obj\Release\RPEF.csproj.AssemblyReference.cache
-D:\my\RWMod-RPEF\Source\RPEF\obj\Release\RPEF.csproj.CoreCompileInputs.cache
-D:\my\RWMod-RPEF\Source\RPEF\obj\Release\RPEF.dll

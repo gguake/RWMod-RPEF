@@ -17,10 +17,10 @@
 */**/bin/Release
 */**/obj/Debug
 */**/obj/Release
-Source/RPEF/obj/
-Source/RPEF/obj/Release/
+Source/RPEF/obj
+Source/RPEF/obj/Release
+Source/.vs
 Source/RPEF/.vs
-Source/RPEF/.idea
 
 Mod/rwconfigrc.json
 

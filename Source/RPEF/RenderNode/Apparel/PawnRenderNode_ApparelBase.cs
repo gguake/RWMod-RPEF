@@ -16,7 +16,7 @@ namespace RPEF
     }
 
     [StaticConstructorOnStartup]
-    public abstract class PawnRenderNode_ApparelBase : PawnRenderNode
+    public abstract class PawnRenderNode_ApparelBase : PawnRenderNode_Apparel
     {
         public float? baseLayerOverride = 0f;
         public DrawData drawDataOverride;

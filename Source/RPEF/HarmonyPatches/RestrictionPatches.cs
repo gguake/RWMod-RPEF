@@ -72,6 +72,10 @@ namespace RPEF
             harmony.Patch(
                 original: AccessTools.Method(typeof(CharacterCardUtility), "LifestageAndXenotypeOptions"),
                 transpiler: new HarmonyMethod(typeof(RestrictionPatches), nameof(CharacterCardUtility_LifestageAndXenotypeOptions_Transpiler)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Pawn_GeneTracker), "Notify_GenesChanged"),
+                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Pawn_GeneTracker_Notify_GenesChanged_Postfix)));
         }
 
         public static void LazyPatch(Harmony harmony)
@@ -400,6 +404,11 @@ namespace RPEF
             });
 
             return codeInstructions;
+        }
+
+        private static void Pawn_GeneTracker_Notify_GenesChanged_Postfix(Pawn ___pawn)
+        {
+            ___pawn.apparel?.DropAllOrMoveAllToInventory((Apparel apparel) => !apparel.PawnCanWear(___pawn));
         }
         #endregion
 

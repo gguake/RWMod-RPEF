@@ -7,7 +7,11 @@ namespace RPEF
     {
         protected override PawnRenderNodeTagDef ParentTagDef => PawnRenderNodeTagDefOf.ApparelHead;
 
-        public PawnRenderNode_HeadApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree) : base(pawn, props, tree)
+        public PawnRenderNode_HeadApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel) : base(pawn, props, tree, apparel)
+        {
+        }
+
+        public PawnRenderNode_HeadApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel, bool useHeadMesh) : base(pawn, props, tree, apparel, useHeadMesh)
         {
         }
     }

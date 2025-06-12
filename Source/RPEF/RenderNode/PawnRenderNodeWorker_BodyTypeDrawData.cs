@@ -44,38 +44,47 @@ namespace RPEF
 
         protected override Vector3 PivotFor(PawnRenderNode node, PawnDrawParms parms)
         {
+            var pivot = Vector3.zero;
             var bodyTypeDrawData = GetDrawDataForBodyType(node, parms.pawn.story?.bodyType);
             if (bodyTypeDrawData != null)
             {
-                var pivot = Vector3.zero;
                 pivot -= (bodyTypeDrawData.PivotForRot(parms.facing) - DrawData.PivotCenter).ToVector3();
-
-                if (node.tree.TryGetAnimationPartForNode(node, out var animationPart))
-                {
-                    pivot = (animationPart.pivot - DrawData.PivotCenter).ToVector3();
-                }
-                if (node.debugPivotOffset != DrawData.PivotCenter)
-                {
-                    pivot.x += node.debugPivotOffset.x - DrawData.PivotCenter.x;
-                    pivot.z += node.debugPivotOffset.y - DrawData.PivotCenter.y;
-                }
-                return pivot;
-
+            }
+            else
+            {
+                return base.PivotFor(node, parms);
             }
 
-            return base.PivotFor(node, parms);
+            if (node.tree.TryGetAnimationPartForNode(node, out var animationPart))
+            {
+                pivot = (animationPart.pivot - DrawData.PivotCenter).ToVector3();
+            }
+            if (node.debugPivotOffset != DrawData.PivotCenter)
+            {
+                pivot.x += node.debugPivotOffset.x - DrawData.PivotCenter.x;
+                pivot.z += node.debugPivotOffset.y - DrawData.PivotCenter.y;
+            }
+
+            return pivot;
         }
 
         public override Vector3 OffsetFor(PawnRenderNode node, PawnDrawParms parms, out Vector3 pivot)
         {
+            var anchorOffset = Vector3.zero;
+            pivot = PivotFor(node, parms);
+
             var bodyTypeDrawData = GetDrawDataForBodyType(node, parms.pawn.story?.bodyType);
             if (bodyTypeDrawData != null)
             {
-                var anchorOffset = Vector3.zero;
-                pivot = PivotFor(node, parms);
 
-                if (node.hediff != null && bodyTypeDrawData.useHediffAnchor)
+                if (bodyTypeDrawData.useBodyPartAnchor)
                 {
+                    if (node.bodyPart == null)
+                    {
+                        Log.ErrorOnce($"Attempted to use a body part anchor but no body-part record has been assigned to this node {node}", node.GetHashCode());
+                        return anchorOffset;
+                    }
+
                     foreach (BodyTypeDef.WoundAnchor item in PawnDrawUtility.FindAnchors(parms.pawn, node.hediff.Part))
                     {
                         if (PawnDrawUtility.AnchorUsable(parms.pawn, item, parms.facing))
@@ -93,23 +102,26 @@ namespace RPEF
                     vector *= num;
                 }
 
-                if (!bodyTypeDrawData.useHediffAnchor && (node.hediff?.Part?.flipGraphic ?? false))
-                {
-                    anchorOffset.x *= -1f;
-                }
+                //if (!bodyTypeDrawData.useHediffAnchor && (node.hediff?.Part?.flipGraphic ?? false))
+                //{
+                //    anchorOffset.x *= -1f;
+                //}
 
                 anchorOffset += vector;
-
-                anchorOffset += node.DebugOffset;
-                if (node.AnimationWorker != null && node.AnimationWorker.Enabled() && !parms.flags.FlagSet(PawnRenderFlags.Portrait))
-                {
-                    anchorOffset += node.AnimationWorker.OffsetAtTick(node.tree.AnimationTick, parms);
-                }
-
-                return anchorOffset;
+            }
+            else
+            {
+                return base.OffsetFor(node, parms, out pivot);
             }
 
-            return base.OffsetFor(node, parms, out pivot);
+            anchorOffset += node.DebugOffset;
+
+            if (!parms.flags.FlagSet(PawnRenderFlags.Portrait) && node.TryGetAnimationOffset(parms, out var offset))
+            {
+                anchorOffset += offset;
+            }
+
+            return anchorOffset;
         }
 
         public override Vector3 ScaleFor(PawnRenderNode node, PawnDrawParms parms)
@@ -118,41 +130,56 @@ namespace RPEF
             if (bodyTypeDrawData != null)
             {
                 var scale = Vector3.one;
-
                 scale.x *= node.Props.drawSize.x * node.debugScale;
                 scale.z *= node.Props.drawSize.y * node.debugScale;
-                if (node.AnimationWorker != null && node.AnimationWorker.Enabled() && !parms.flags.FlagSet(PawnRenderFlags.Portrait))
+
+                if (!parms.flags.FlagSet(PawnRenderFlags.Portrait))
                 {
-                    scale = scale.MultipliedBy(node.AnimationWorker.ScaleAtTick(node.tree.AnimationTick, parms));
+                    if (node.TryGetAnimationScale(parms, out var offset))
+                    {
+                        scale = scale.ScaledBy(offset);
+                    }
+
+                    var graphicState = GetGraphicState(node, parms);
+                    if (graphicState != null && graphicState.TryGetDefaultGraphic(out var graphic))
+                    {
+                        scale = scale.ScaledBy(new Vector3(graphic.drawSize.x, 1f, graphic.drawSize.y));
+                    }
                 }
 
                 scale *= bodyTypeDrawData.ScaleFor(parms.pawn);
                 return scale;
             }
-
-            return base.ScaleFor(node, parms);
+            else
+            {
+                return base.ScaleFor(node, parms);
+            }
         }
 
         public override Quaternion RotationFor(PawnRenderNode node, PawnDrawParms parms)
         {
+            var rotation = node.DebugAngleOffset;
             var bodyTypeDrawData = GetDrawDataForBodyType(node, parms.pawn.story?.bodyType);
             if (bodyTypeDrawData != null)
             {
-                float rotation = node.DebugAngleOffset + bodyTypeDrawData.RotationOffsetForRot(parms.facing);
-
-                if (node.AnimationWorker != null && node.AnimationWorker.Enabled() && !parms.flags.FlagSet(PawnRenderFlags.Portrait))
-                {
-                    rotation += node.AnimationWorker.AngleAtTick(node.tree.AnimationTick, parms);
-                }
-                if (node.hediff?.Part?.flipGraphic ?? false)
-                {
-                    rotation *= -1f;
-                }
-                return Quaternion.AngleAxis(rotation, Vector3.up);
-
+                rotation += bodyTypeDrawData.RotationOffsetForRot(parms.facing);
+            }
+            else
+            {
+                return base.RotationFor(node, parms);
             }
 
-            return base.RotationFor(node, parms);
+            if (!parms.flags.FlagSet(PawnRenderFlags.Portrait) && node.TryGetAnimationRotation(parms, out var offset))
+            {
+                rotation += offset;
+            }
+
+            if (node.FlipGraphic(parms))
+            {
+                rotation *= -1f;
+            }
+
+            return Quaternion.AngleAxis(rotation, Vector3.up);
         }
 
         public override float LayerFor(PawnRenderNode node, PawnDrawParms parms)

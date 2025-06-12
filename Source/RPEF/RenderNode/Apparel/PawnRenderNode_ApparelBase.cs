@@ -26,7 +26,17 @@ namespace RPEF
         private static FieldInfo _field_PawnRenderTree_nodesByTag = AccessTools.Field(typeof(PawnRenderTree), "nodesByTag");
         private static FieldInfo _field_PawnRenderTree_layerOffsets = AccessTools.Field(typeof(PawnRenderTree), "layerOffsets");
 
-        public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree) : base(pawn, props, tree)
+        public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel, bool useHeadMesh) : base(pawn, props, tree, apparel, useHeadMesh)
+        {
+            Init(props);
+        }
+
+        public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel) : base(pawn, props, tree, apparel)
+        {
+            Init(props);
+        }
+
+        private void Init(PawnRenderNodeProperties props)
         {
             var parentTagDef = ParentTagDef;
             if (props.parentTagDef == ParentTagDef)

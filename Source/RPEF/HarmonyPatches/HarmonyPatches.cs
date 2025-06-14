@@ -99,6 +99,10 @@ namespace RPEF
                     original: AccessTools.Method(typeof(XmlInheritance), nameof(XmlInheritance.TryRegister)),
                     prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(XmlInheritance_TryRegister_Prefix)));
 
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(DynamicPawnRenderNodeSetup_Apparel), "ProcessApparel"),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(DynamicPawnRenderNodeSetup_Apparel_ProcessApparel)));
+
                 RestrictionPatches.Patch(harmony);
             }
             catch (Exception e)
@@ -545,6 +549,28 @@ namespace RPEF
                         ProcessImportingNodesRecursively(child);
                     }
                 }
+            }
+        }
+
+        private static void DynamicPawnRenderNodeSetup_Apparel_ProcessApparel(ref (PawnRenderNode node, PawnRenderNode parent) __result, PawnRenderTree tree, Apparel ap)
+        {
+            if (__result.node is PawnRenderNode_ApparelBase)
+            {
+                PawnRenderNodeTagDef abstractParentApparelTagDef = __result.node.Props.parentTagDef;
+                if (__result.node.Props.parentTagDef == null)
+                {
+                    abstractParentApparelTagDef = (ap.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || ap.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
+                    PawnRenderNodeTagDefOf.ApparelHead :
+                    PawnRenderNodeTagDefOf.ApparelBody;
+                }
+
+                PawnRenderNode parentNode = null;
+                if (abstractParentApparelTagDef != null)
+                {
+                    tree.TryGetNodeByTag(abstractParentApparelTagDef, out parentNode);
+                }
+
+                __result.parent = parentNode;
             }
         }
     }

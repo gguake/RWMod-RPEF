@@ -1,11 +1,8 @@
 ﻿using HarmonyLib;
 using RimWorld;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Verse;
 
 namespace RPEF
@@ -16,56 +13,80 @@ namespace RPEF
     }
 
     [StaticConstructorOnStartup]
-    public abstract class PawnRenderNode_ApparelBase : PawnRenderNode_Apparel
+    public class PawnRenderNode_ApparelBase : PawnRenderNode_Apparel
     {
         public float? baseLayerOverride = 0f;
         public DrawData drawDataOverride;
 
-        protected abstract PawnRenderNodeTagDef ParentTagDef { get; }
-
         private static FieldInfo _field_PawnRenderTree_nodesByTag = AccessTools.Field(typeof(PawnRenderTree), "nodesByTag");
-        private static FieldInfo _field_PawnRenderTree_layerOffsets = AccessTools.Field(typeof(PawnRenderTree), "layerOffsets");
 
-        public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel, bool useHeadMesh) : base(pawn, props, tree, apparel, useHeadMesh)
+        public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel, bool useHeadMesh) :
+            base(pawn, GenerateNewProperties(pawn, tree, props, apparel), tree, apparel, useHeadMesh)
         {
-            Init(props);
         }
 
-        public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel) : base(pawn, props, tree, apparel)
+        public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel) :
+            base(pawn, GenerateNewProperties(pawn, tree, props, apparel), tree, apparel)
         {
-            Init(props);
         }
 
-        private void Init(PawnRenderNodeProperties props)
+        private static PawnRenderNodeProperties GenerateNewProperties(Pawn pawn, PawnRenderTree tree, PawnRenderNodeProperties originalProps, Apparel apparel)
         {
-            var parentTagDef = ParentTagDef;
-            if (props.parentTagDef == ParentTagDef)
+            var nodesByTag = _field_PawnRenderTree_nodesByTag.GetValue(tree) as Dictionary<PawnRenderNodeTagDef, PawnRenderNode>;
+
+            var apparelWornIndex = pawn.apparel.WornApparel.IndexOf(apparel);
+
+
+            PawnRenderNodeTagDef abstractParentApparelTagDef = originalProps.parentTagDef;
+            if (originalProps.parentTagDef == null)
             {
-                var nodesByTag = _field_PawnRenderTree_nodesByTag.GetValue(tree) as Dictionary<PawnRenderNodeTagDef, PawnRenderNode>;
-                var layerOffsets = _field_PawnRenderTree_layerOffsets.GetValue(tree) as Dictionary<PawnRenderNode, float>;
+                abstractParentApparelTagDef = (apparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || apparel.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
+                PawnRenderNodeTagDefOf.ApparelHead :
+                PawnRenderNodeTagDefOf.ApparelBody;
+            }
 
-                if (nodesByTag == null || !nodesByTag.TryGetValue(parentTagDef, out var parentNode)) { return; }
+            PawnRenderNode parentNode = null;
+            if (abstractParentApparelTagDef != null)
+            {
+                parentNode = nodesByTag[abstractParentApparelTagDef];
+            }
 
-                var parentLayerOffset = 0f;
-                if (layerOffsets != null && layerOffsets.ContainsKey(parentNode))
+            int layerOffset = 0;
+            for (int i = 0; i < apparelWornIndex; ++i)
+            {
+                var wornApparel = pawn.apparel.WornApparel[i];
+                if (wornApparel.def.IsApparel)
                 {
-                    parentLayerOffset = layerOffsets[parentNode];
-                }
-
-                baseLayerOverride = parentNode.Props.baseLayer + parentLayerOffset;
-
-                if (parentNode != null)
-                {
-                    if (layerOffsets.ContainsKey(parentNode))
+                    var parentTagDef = wornApparel.def.apparel.parentTagDef;
+                    if (parentTagDef == null)
                     {
-                        layerOffsets[parentNode]++;
+                        parentTagDef = (wornApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || wornApparel.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
+                            PawnRenderNodeTagDefOf.ApparelHead :
+                            PawnRenderNodeTagDefOf.ApparelBody;
                     }
-                    else
+
+                    if (abstractParentApparelTagDef == parentTagDef)
                     {
-                        layerOffsets.Add(parentNode, 1f);
+                        layerOffset++;
                     }
                 }
             }
+
+            var props = new PawnRenderNodeProperties()
+            {
+                nodeClass = originalProps.nodeClass,
+                workerClass = originalProps.workerClass,
+                subworkerClasses = originalProps.subworkerClasses,
+                texPath = originalProps.texPath,
+                texPathFemale = originalProps.texPathFemale,
+                parentTagDef = originalProps.parentTagDef,
+
+                baseLayer = (parentNode?.Props.baseLayer ?? 0) + layerOffset,
+                drawData = originalProps.drawData,
+                children = originalProps.children,
+            };
+
+            return props;
         }
     }
 }

@@ -81,11 +81,7 @@
     <Compile Include="PawnRenderSubWorkerGeneratorInfo.cs" />
     <Compile Include="PawnRenderSubWorkers\PawnRenderSubWorker_DrawByDevelopmentStage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RenderNode\Apparel\PawnRenderNodeWorker_BodyApparelBase.cs" />
-    <Compile Include="RenderNode\Apparel\PawnRenderNodeWorker_HeadApparelBase.cs" />
     <Compile Include="RenderNode\Apparel\PawnRenderNode_ApparelBase.cs" />
-    <Compile Include="RenderNode\Apparel\PawnRenderNode_BodyApparelBase.cs" />
-    <Compile Include="RenderNode\Apparel\PawnRenderNode_HeadApparelBase.cs" />
     <Compile Include="RenderNode\PawnRenderNodeWorker_BodyTypeDrawData.cs" />
     <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
     <Compile Include="RenderNode\PawnRenderNode_HairConstant.cs" />

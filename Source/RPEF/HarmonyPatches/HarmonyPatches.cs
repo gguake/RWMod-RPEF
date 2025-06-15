@@ -661,7 +661,6 @@ namespace RPEF
                                 {
                                     for (int j = 0; j < modExtension.requireBodyParts.Count; ++j)
                                     {
-                                        Log.Message($"{modExtension.requireBodyParts[j]} {hediffMissingPart.Part.untranslatedCustomLabel}");
                                         if (modExtension.requireBodyParts[j] == hediffMissingPart.Part.untranslatedCustomLabel)
                                         {
                                             __result = false;

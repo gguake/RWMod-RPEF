@@ -77,6 +77,7 @@
     <Compile Include="ModExtensions\Hook\PawnGeneratorKindHook.cs" />
     <Compile Include="ModExtensions\Hook\PawnGeneratorRaceHook.cs" />
     <Compile Include="ModExtensions\Hook\RecipeBillHook.cs" />
+    <Compile Include="ModExtensions\HumanlikeFlyExtension.cs" />
     <Compile Include="ModExtensions\RaceExtension.cs" />
     <Compile Include="PawnRenderSubWorkerGeneratorInfo.cs" />
     <Compile Include="PawnRenderSubWorkers\PawnRenderSubWorker_DrawByDevelopmentStage.cs" />

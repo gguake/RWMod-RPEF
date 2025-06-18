@@ -83,7 +83,23 @@ namespace RPEF
                 return;
             }
 
-            var position = parent.DrawPos + Props.additionalOffset;
+            if (Props.refreshIntervalTicks > 0)
+            {
+                var position = parent.DrawPos + Props.additionalOffset;
+                RegisterNewTrail(position);
+            }
+        }
+
+        public override void PostDraw()
+        {
+            if (mesh != null)
+            {
+                Graphics.DrawMesh(mesh, new Vector3(), Quaternion.identity, Props.material, 0);
+            }
+        }
+
+        public void RegisterNewTrail(Vector3 position)
+        {
             if (!trailStart)
             {
                 for (int i = 0; i < points.Length; ++i)
@@ -118,14 +134,6 @@ namespace RPEF
                     mesh = new Mesh();
                 }
                 lineRenderer.BakeMesh(mesh, Find.Camera);
-            }
-        }
-
-        public override void PostDraw()
-        {
-            if (mesh != null)
-            {
-                Graphics.DrawMesh(mesh, new Vector3(), Quaternion.identity, Props.material, 0);
             }
         }
     }

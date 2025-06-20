@@ -110,31 +110,28 @@ namespace RPEF
                 trailStart = true;
             }
 
-            if (parent.IsHashIntervalTick(Props.refreshIntervalTicks))
+            for (int i = points.Length - 1; i >= 1; i--)
             {
-                for (int i = points.Length - 1; i >= 1; i--)
-                {
-                    points[i] = points[i - 1];
-                }
-                points[0] = position;
-
-                var lineRenderer = LineRendererManager.LineRenderer;
-                lineRenderer.positionCount = points.Length;
-                lineRenderer.material = Props.material;
-                lineRenderer.textureMode = Props.lineTextureMode;
-                lineRenderer.widthCurve = Props.aniCurve;
-
-                for (int i = 0; i < points.Length; ++i)
-                {
-                    lineRenderer.SetPosition(i, points[points.Length - 1 - i]);
-                }
-
-                if (mesh == null)
-                {
-                    mesh = new Mesh();
-                }
-                lineRenderer.BakeMesh(mesh, Find.Camera);
+                points[i] = points[i - 1];
             }
+            points[0] = position;
+
+            var lineRenderer = LineRendererManager.LineRenderer;
+            lineRenderer.positionCount = points.Length;
+            lineRenderer.material = Props.material;
+            lineRenderer.textureMode = Props.lineTextureMode;
+            lineRenderer.widthCurve = Props.aniCurve;
+
+            for (int i = 0; i < points.Length; ++i)
+            {
+                lineRenderer.SetPosition(i, points[points.Length - 1 - i]);
+            }
+
+            if (mesh == null)
+            {
+                mesh = new Mesh();
+            }
+            lineRenderer.BakeMesh(mesh, Find.Camera);
         }
     }
 }

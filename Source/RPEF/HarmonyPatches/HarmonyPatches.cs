@@ -560,26 +560,36 @@ namespace RPEF
             }
         }
 
-        private static void DynamicPawnRenderNodeSetup_Apparel_ProcessApparel(ref (PawnRenderNode node, PawnRenderNode parent) __result, PawnRenderTree tree, Apparel ap)
+        private static void DynamicPawnRenderNodeSetup_Apparel_ProcessApparel(ref IEnumerable<(PawnRenderNode node, PawnRenderNode parent)> __result, PawnRenderTree tree, Apparel ap)
         {
-            if (__result.node is PawnRenderNode_ApparelBase)
+            var result = new List<(PawnRenderNode node, PawnRenderNode parent)>();
+            foreach (var tuple in __result)
             {
-                PawnRenderNodeTagDef abstractParentApparelTagDef = __result.node.Props.parentTagDef;
-                if (__result.node.Props.parentTagDef == null)
+                if (tuple.node is PawnRenderNode_ApparelBase)
                 {
-                    abstractParentApparelTagDef = (ap.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || ap.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
-                    PawnRenderNodeTagDefOf.ApparelHead :
-                    PawnRenderNodeTagDefOf.ApparelBody;
-                }
+                    PawnRenderNodeTagDef abstractParentApparelTagDef = tuple.node.Props.parentTagDef;
+                    if (tuple.node.Props.parentTagDef == null)
+                    {
+                        abstractParentApparelTagDef = (ap.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || ap.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
+                        PawnRenderNodeTagDefOf.ApparelHead :
+                        PawnRenderNodeTagDefOf.ApparelBody;
+                    }
 
-                PawnRenderNode parentNode = null;
-                if (abstractParentApparelTagDef != null)
+                    PawnRenderNode parentNode = null;
+                    if (abstractParentApparelTagDef != null)
+                    {
+                        tree.TryGetNodeByTag(abstractParentApparelTagDef, out parentNode);
+                    }
+
+                    result.Add((tuple.node, parentNode));
+                }
+                else
                 {
-                    tree.TryGetNodeByTag(abstractParentApparelTagDef, out parentNode);
+                    result.Add(tuple);
                 }
-
-                __result.parent = parentNode;
             }
+
+            __result = result;
         }
 
         private static AnimationDef Pawn_FlightTracker_GetBestFlyAnimation_Injection(Pawn pawn)

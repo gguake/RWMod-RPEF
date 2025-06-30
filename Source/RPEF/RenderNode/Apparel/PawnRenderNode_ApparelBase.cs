@@ -1,17 +1,11 @@
 ﻿using HarmonyLib;
 using RimWorld;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Verse;
 
 namespace RPEF
 {
-    public class PawnRenderNodeProperties_ApparelBase : PawnRenderNodeProperties
-    {
-        public ThingDef apparelThingDef;
-    }
-
     [StaticConstructorOnStartup]
     public class PawnRenderNode_ApparelBase : PawnRenderNode_Apparel
     {

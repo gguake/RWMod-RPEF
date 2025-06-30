@@ -120,7 +120,7 @@ namespace RPEF
             {
                 Log.Error(e.Message);
                 Log.Error(e.StackTrace);
-                Log.Error("[RaceExt] Some error occured in patch process..");
+                Log.Error("[RPEF] Some error occured in patch process..");
                 throw;
             }
         }
@@ -133,13 +133,13 @@ namespace RPEF
 
                 harmony.PatchAll();
 
-                Log.Message($"[RaceExt] Patch Completed");
+                Log.Message($"[RPEF] Patch Completed");
             }
             catch (Exception e)
             {
                 Log.Error(e.Message);
                 Log.Error(e.StackTrace);
-                Log.Error("[RaceExt] Some error occured in lazy patch process..");
+                Log.Error("[RPEF] Some error occured in lazy patch process..");
             }
         }
 

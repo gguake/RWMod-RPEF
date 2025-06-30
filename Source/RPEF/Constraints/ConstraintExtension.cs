@@ -8,14 +8,12 @@ namespace RPEF
     {
         private static Dictionary<Def, List<Constraint>> _defConstraintCache = new Dictionary<Def, List<Constraint>>();
         private static Dictionary<int, List<Constraint>> _pawnConstraintCache = new Dictionary<int, List<Constraint>>();
-        private static GameInfo _curGameInfo;
         private static int _lastPawnCacheRefreshTicks;
 
         public static void ClearCache()
         {
             _defConstraintCache.Clear();
             _pawnConstraintCache.Clear();
-            _curGameInfo = Find.GameInfo;
             _lastPawnCacheRefreshTicks = 0;
         }
 
@@ -71,11 +69,10 @@ namespace RPEF
         {
             if (pawn == null) { yield break; }
 
-            if (Find.GameInfo != _curGameInfo || GenTicks.TicksGame != _lastPawnCacheRefreshTicks)
+            if (GenTicks.TicksGame != _lastPawnCacheRefreshTicks)
             {
                 _pawnConstraintCache.Clear();
 
-                _curGameInfo = Find.GameInfo;
                 _lastPawnCacheRefreshTicks = GenTicks.TicksGame;
             }
 

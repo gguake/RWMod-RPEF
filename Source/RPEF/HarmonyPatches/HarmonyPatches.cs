@@ -21,6 +21,9 @@ namespace RPEF
             harmony = new Harmony("rimworld.gguake.rpef");
             try
             {
+                harmony.Patch(AccessTools.Method(typeof(PlayDataLoader), "ResetStaticDataPost"),
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PlayDataLoader_ResetStaticDataPost_Postfix)));
+
                 harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GeneratePawn), new Type[] { typeof(PawnGenerationRequest) }),
                     prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Prefix)));
 
@@ -138,6 +141,11 @@ namespace RPEF
                 Log.Error(e.StackTrace);
                 Log.Error("[RaceExt] Some error occured in lazy patch process..");
             }
+        }
+
+        private static void PlayDataLoader_ResetStaticDataPost_Postfix()
+        {
+            ConstraintExtension.ClearCache();
         }
 
         private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request)

@@ -11,5 +11,6 @@ namespace RPEF
     public class ConstraintModExtension : DefModExtension
     {
         public ConstraintDef def;
+        public List<ConstraintDef> defs;
     }
 }

@@ -67,8 +67,7 @@
     <Compile Include="Constraints\Implementations\ThoughtConstraint.cs" />
     <Compile Include="Constraints\Implementations\TraitConstraint.cs" />
     <Compile Include="Constraints\Implementations\XenotypeConstraint.cs" />
-    <Compile Include="Constraint\AppliedConstraintCache.cs" />
-    <Compile Include="Constraint\ConstraintExtension.cs" />
+    <Compile Include="Constraints\ConstraintExtension.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
     <Compile Include="ModExtensions\Hook\ApparelGraphicHook.cs" />
@@ -79,7 +78,6 @@
     <Compile Include="ModExtensions\Hook\RecipeBillHook.cs" />
     <Compile Include="ModExtensions\HumanlikeFlyExtension.cs" />
     <Compile Include="ModExtensions\RaceExtension.cs" />
-    <Compile Include="PawnRenderSubWorkerGeneratorInfo.cs" />
     <Compile Include="PawnRenderSubWorkers\PawnRenderSubWorker_DrawByDevelopmentStage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RenderNode\Apparel\PawnRenderNode_ApparelBase.cs" />

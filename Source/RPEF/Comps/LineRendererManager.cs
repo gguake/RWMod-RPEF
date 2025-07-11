@@ -13,7 +13,7 @@ namespace RPEF
             {
                 if (_lineRendererObject == null)
                 {
-                    _lineRendererObject = new GameObject("VVRace_LineRendererObject", new Type[] { typeof(LineRenderer) });
+                    _lineRendererObject = new GameObject("__RPEF_LineRendererObject", new Type[] { typeof(LineRenderer) });
                     _lineRendererObject.AddComponent<LineRenderer>();
 
                     _lineRenderer = _lineRendererObject.GetComponent<LineRenderer>();

@@ -17,7 +17,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\Mod\v1.5\Assemblies\</OutputPath>
+    <OutputPath>..\..\Mod\v1.6\Assemblies\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -69,7 +69,12 @@
     <Compile Include="Constraints\Implementations\XenotypeConstraint.cs" />
     <Compile Include="Constraints\ConstraintExtension.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
-    <Compile Include="HarmonyPatches\RestrictionPatches.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatches.EquipmentExt.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatches.HumanlikeFlyExt.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatches.Race.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatches.Restriction.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatches.XML.cs" />
+    <Compile Include="ModExtensions\EquipmentExtension.cs" />
     <Compile Include="ModExtensions\Hook\ApparelGraphicHook.cs" />
     <Compile Include="ModExtensions\Hook\FactionContinuePawnKindHook.cs" />
     <Compile Include="ModExtensions\Hook\FactionSettlementHook.cs" />

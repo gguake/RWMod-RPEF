@@ -10,79 +10,82 @@ using static RimWorld.FoodUtility;
 
 namespace RPEF
 {
-    public static class RestrictionPatches
+    public static partial class HarmonyPatches
     {
-        public static void Patch(Harmony harmony)
+        public static void PatchRestrictions(Harmony harmony)
         {
+            harmony.Patch(AccessTools.Method(typeof(PlayDataLoader), "ResetStaticDataPost"),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PlayDataLoader_ResetStaticDataPost_Postfix)));
+
             harmony.Patch(AccessTools.Method(typeof(Pawn_StoryTracker), "TryGetRandomHeadFromSet"),
-                transpiler: new HarmonyMethod(typeof(RestrictionPatches), nameof(Pawn_StoryTracker_TryGetRandomHeadFromSet_Transpiler)));
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_StoryTracker_TryGetRandomHeadFromSet_Transpiler)));
             harmony.Patch(__Pawn_StoryTracker_TryGetRandomHeadFromSet_CanUseHeadType,
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Pawn_StoryTracker_TryGetRandomHeadFromSet_CanUseHeadType_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_StoryTracker_TryGetRandomHeadFromSet_CanUseHeadType_Postfix)));
 
             harmony.Patch(AccessTools.Method(typeof(PawnStyleItemChooser), nameof(PawnStyleItemChooser.WantsToUseStyle)),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnStyleItemChooser_WantsToUseStyle_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnStyleItemChooser_WantsToUseStyle_Postfix)));
 
             harmony.Patch(AccessTools.Method(typeof(ApparelProperties), nameof(ApparelProperties.PawnCanWear), new Type[] { typeof(Pawn), typeof(bool) }),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(ApparelProperties_PawnCanWear_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(ApparelProperties_PawnCanWear_Postfix)));
 
             harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), nameof(EquipmentUtility.CanEquip), new Type[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(EquipmentUtility_CanEquip_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(EquipmentUtility_CanEquip_Postfix)));
 
             harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.XenotypesAvailableFor)),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_XenotypesAvailableFor_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_XenotypesAvailableFor_Postfix)));
 
             harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), nameof(PawnBioAndNameGenerator.FillBackstorySlotShuffled)),
-                transpiler: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnBioAndNameGenerator_FillBackstorySlotShuffled_Transpiler)));
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_FillBackstorySlotShuffled_Transpiler)));
 
             harmony.Patch(AccessTools.Method(typeof(Pawn_HealthTracker), nameof(Pawn_HealthTracker.AddHediff), new Type[] { typeof(Hediff), typeof(BodyPartRecord), typeof(DamageInfo?), typeof(DamageWorker.DamageResult) }),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Pawn_HealthTracker_AddHediff_Prefix)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_HealthTracker_AddHediff_Prefix)));
 
             harmony.Patch(AccessTools.Method(typeof(HediffGiverUtility), nameof(HediffGiverUtility.TryApply)),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(HediffGiverUtility_TryApply_Prefix)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(HediffGiverUtility_TryApply_Prefix)));
 
             harmony.Patch(AccessTools.Method(typeof(MemoryThoughtHandler), nameof(MemoryThoughtHandler.TryGainMemoryFast), new Type[] { typeof(ThoughtDef), typeof(Precept) }),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(MemoryThoughtHandler_TryGainMemoryFast_Prefix_1)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(MemoryThoughtHandler_TryGainMemoryFast_Prefix_1)));
 
             harmony.Patch(AccessTools.Method(typeof(MemoryThoughtHandler), nameof(MemoryThoughtHandler.TryGainMemoryFast), new Type[] { typeof(ThoughtDef), typeof(int), typeof(Precept) }),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(MemoryThoughtHandler_TryGainMemoryFast_Prefix_2)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(MemoryThoughtHandler_TryGainMemoryFast_Prefix_2)));
 
             harmony.Patch(AccessTools.Method(typeof(MemoryThoughtHandler), nameof(MemoryThoughtHandler.TryGainMemory), new Type[] { typeof(Thought_Memory), typeof(Pawn) }),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(MemoryThoughtHandler_TryGainMemory_Prefix)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(MemoryThoughtHandler_TryGainMemory_Prefix)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(Bill), nameof(Bill.PawnAllowedToStartAnew)),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Bill_PawnAllowedToStartAnew_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Bill_PawnAllowedToStartAnew_Postfix)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GenerateTraitsFor)),
-                transpiler: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnGenerator_GenerateTraitsFor_Transpiler)));
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GenerateTraitsFor_Transpiler)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(TraitSet), nameof(TraitSet.GainTrait)),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(TraitSet_GainTrait_Prefix)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(TraitSet_GainTrait_Prefix)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(FoodUtility), nameof(FoodUtility.ThoughtsFromIngesting)),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(FoodUtility_ThoughtsFromIngesting_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(FoodUtility_ThoughtsFromIngesting_Postfix)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(CharacterCardUtility), "SetupGenerationRequest"),
-                prefix: new HarmonyMethod(typeof(RestrictionPatches), nameof(CharacterCardUtility_SetupGenerationRequest_Prefix)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(CharacterCardUtility_SetupGenerationRequest_Prefix)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(CharacterCardUtility), "LifestageAndXenotypeOptions"),
-                transpiler: new HarmonyMethod(typeof(RestrictionPatches), nameof(CharacterCardUtility_LifestageAndXenotypeOptions_Transpiler)));
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(CharacterCardUtility_LifestageAndXenotypeOptions_Transpiler)));
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(Pawn_GeneTracker), "Notify_GenesChanged"),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(Pawn_GeneTracker_Notify_GenesChanged_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_GeneTracker_Notify_GenesChanged_Postfix)));
         }
 
-        public static void LazyPatch(Harmony harmony)
+        public static void LazyPatchRestrictions(Harmony harmony)
         {
             harmony.Patch(
                 original: AccessTools.Method(typeof(PawnApparelGenerator), "CanUsePair"),
-                postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnApparelGenerator_CanUsePair_Postfix)));
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnApparelGenerator_CanUsePair_Postfix)));
 
             {
                 foreach (var subClass in typeof(PawnApparelGenerator).GetNestedType("PossibleApparelSet", BindingFlags.NonPublic).GetNestedTypes(BindingFlags.NonPublic))
@@ -92,17 +95,22 @@ namespace RPEF
                         var name = method.Name;
                         if (name.Contains("HatPairValidator"))
                         {
-                            harmony.Patch(original: method, postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnApparelGenerator_PossibleApparelSet_Validator_Postfix)));
+                            harmony.Patch(original: method, postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnApparelGenerator_PossibleApparelSet_Validator_Postfix)));
                         }
                         else if (name.Contains("ParkaPairValidator"))
                         {
-                            harmony.Patch(original: method, postfix: new HarmonyMethod(typeof(RestrictionPatches), nameof(PawnApparelGenerator_PossibleApparelSet_Validator_Postfix)));
+                            harmony.Patch(original: method, postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnApparelGenerator_PossibleApparelSet_Validator_Postfix)));
                         }
                     }
                 }
             }
 
             Log.Message($"[RaceExt] Restriction Patch Succeeded");
+        }
+
+        private static void PlayDataLoader_ResetStaticDataPost_Postfix()
+        {
+            ConstraintExtension.ClearCache();
         }
 
         #region EarlyPatch
@@ -216,7 +224,7 @@ namespace RPEF
             instructions.InsertRange(injectionIndex, new CodeInstruction[]
             {
                 new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RestrictionPatches), nameof(RemoveNotCompatibleBackstories))),
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(RemoveNotCompatibleBackstories))),
             });
 
             return instructions;
@@ -327,7 +335,7 @@ namespace RPEF
                 instructions.InsertRange(index + 1, new CodeInstruction[]
                 {
                     new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RestrictionPatches), nameof(RestrictionPatches.FilterTraitCandidates))),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.FilterTraitCandidates))),
                 });
             }
             else
@@ -400,7 +408,7 @@ namespace RPEF
             codeInstructions.InsertRange(index, new CodeInstruction[]
             {
                 new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RestrictionPatches), nameof(RestrictionPatches.CharacterCardUtility_LifestageAndXenotypeOptions_Injection)))
+                new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.CharacterCardUtility_LifestageAndXenotypeOptions_Injection)))
             });
 
             return codeInstructions;

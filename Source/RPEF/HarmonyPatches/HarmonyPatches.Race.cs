@@ -76,6 +76,15 @@ namespace RPEF
             harmony.Patch(
                 original: AccessTools.Method(typeof(InteractionWorker_RomanceAttempt), nameof(InteractionWorker_RomanceAttempt.SuccessChance)),
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(InteractionWorker_RomanceAttempt_SuccessChance_Postfix)));
+
+            // 조각상 관련
+            harmony.Patch(
+                original: AccessTools.Method(typeof(CompStatue), "CreateSnapshotOfPawn_HookForMods"),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(CompStatue_CreateSnapshotOfPawn_HookForMods_Postfix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(CompStatue), "InitFakePawn"),
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(CompStatue_InitFakePawn_Transpiler)));
         }
 
         private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request)
@@ -371,5 +380,49 @@ namespace RPEF
             }
         }
 
+        private const string CompStatueDictKey = "_RPEF_ThingDef";
+        private static void CompStatue_CreateSnapshotOfPawn_HookForMods_Postfix(Pawn p, Dictionary<string, object> dictToStoreDataIn)
+        {
+            if (p.def != ThingDefOf.Human)
+            {
+                dictToStoreDataIn.Add(CompStatueDictKey, p.def);
+            }
+        }
+
+        private static ThingDef CompStatue_InitFakePawn_Injection(ThingDef thingDef, Dictionary<string, object> additionalSavedPawnDataForMods)
+        {
+            if (additionalSavedPawnDataForMods != null && additionalSavedPawnDataForMods.TryGetValue(CompStatueDictKey, out var td))
+            {
+                if (td != null && thingDef == ThingDefOf.Human)
+                {
+                    return (ThingDef)td;
+                }
+            }
+
+            return thingDef;
+        }
+        private static IEnumerable<CodeInstruction> CompStatue_InitFakePawn_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        {
+            var instructions = codeInstructions.ToList();
+
+            var index = instructions.FindIndex(
+                v =>
+                v.opcode == OpCodes.Ldsfld &&
+                v.OperandIs(AccessTools.Field(typeof(ThingDefOf), nameof(ThingDefOf.Human))));
+
+            if (index >= 0)
+            {
+                var injectionIndex = index + 1;
+
+                instructions.InsertRange(injectionIndex, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(CompStatue_InitFakePawn_Injection)))
+                });
+            }
+
+            return instructions;
+        }
     }
 }

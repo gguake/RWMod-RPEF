@@ -98,6 +98,11 @@ namespace RPEF
             }
         }
 
+        private static void Test(int ticks, Pawn pawn)
+        {
+            Log.Message($"ticks: {ticks} {pawn}");
+        }
+
         private static IEnumerable<CodeInstruction> Pawn_FlightTracker_Notify_JobStarted_Transpiler(IEnumerable<CodeInstruction> codeInstructions, ILGenerator ilGenerator)
         {
             var instructions = codeInstructions.ToList();
@@ -131,44 +136,43 @@ namespace RPEF
                     instructions.InsertRange(injectionIndex, new CodeInstruction[]
                     {
                         new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labelInjection),
-                            new CodeInstruction(OpCodes.Ldstr, $"1"),
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "flightCooldownTicks")),
+                            new CodeInstruction(OpCodes.Dup),
+                            new CodeInstruction(OpCodes.Ldarg_0),
+                            new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.Test))),
+
+                        new CodeInstruction(OpCodes.Ldc_I4_0),
+                        new CodeInstruction(OpCodes.Bge_Un_S, labelSkip),
+
+                            new CodeInstruction(OpCodes.Ldstr, $"test2"),
                             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
 
+                        new CodeInstruction(OpCodes.Ldarg_0),
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
                         new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(Pawn), nameof(Pawn.Drafted))),
                         new CodeInstruction(OpCodes.Brfalse_S, labelSkip),
-                            new CodeInstruction(OpCodes.Ldstr, $"2"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
 
+                            new CodeInstruction(OpCodes.Ldstr, $"test3"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
 
                         new CodeInstruction(OpCodes.Ldarg_0),
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Thing), nameof(Thing.def))),
                         new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Def), nameof(Def.GetModExtension), generics: new Type[] { typeof(HumanlikeFlyExtension) })),
                         new CodeInstruction(OpCodes.Dup),
-                            new CodeInstruction(OpCodes.Ldstr, $"3"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
-
+                        
                         new CodeInstruction(OpCodes.Brtrue_S, labelNullableSkip),
-                            new CodeInstruction(OpCodes.Ldstr, $"4"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
-
 
                         new CodeInstruction(OpCodes.Pop),
                         new CodeInstruction(OpCodes.Ldc_I4_0),
-                            new CodeInstruction(OpCodes.Ldstr, $"5"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
 
                         new CodeInstruction(OpCodes.Br_S, labelNullableNull),
-                            new CodeInstruction(OpCodes.Ldstr, $"6"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
 
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(HumanlikeFlyExtension), nameof(HumanlikeFlyExtension.alwaysFlyIfDrafted))).WithLabels(labelNullableSkip),
-                            new CodeInstruction(OpCodes.Ldstr, $"7"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
                         new CodeInstruction(OpCodes.Brfalse_S, labelSkip).WithLabels(labelNullableNull),
 
-                            new CodeInstruction(OpCodes.Ldstr, $"8"),
+                            new CodeInstruction(OpCodes.Ldstr, $"test"),
                             new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
 
                         new CodeInstruction(OpCodes.Ldarg_0),

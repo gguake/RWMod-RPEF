@@ -98,11 +98,6 @@ namespace RPEF
             }
         }
 
-        private static void Test(int ticks, Pawn pawn)
-        {
-            Log.Message($"ticks: {ticks} {pawn}");
-        }
-
         private static IEnumerable<CodeInstruction> Pawn_FlightTracker_Notify_JobStarted_Transpiler(IEnumerable<CodeInstruction> codeInstructions, ILGenerator ilGenerator)
         {
             var instructions = codeInstructions.ToList();
@@ -110,6 +105,7 @@ namespace RPEF
             var labelSkip = ilGenerator.DefineLabel();
             var labelNullableSkip = ilGenerator.DefineLabel();
             var labelNullableNull = ilGenerator.DefineLabel();
+            var labelFlyingJump = ilGenerator.DefineLabel();
 
             {
                 var index = instructions.FindIndex(
@@ -137,24 +133,14 @@ namespace RPEF
                     {
                         new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labelInjection),
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "flightCooldownTicks")),
-                            new CodeInstruction(OpCodes.Dup),
-                            new CodeInstruction(OpCodes.Ldarg_0),
-                            new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.Test))),
 
                         new CodeInstruction(OpCodes.Ldc_I4_0),
-                        new CodeInstruction(OpCodes.Bge_Un_S, labelSkip),
-
-                            new CodeInstruction(OpCodes.Ldstr, $"test2"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+                        new CodeInstruction(OpCodes.Bgt_Un_S, labelSkip),
 
                         new CodeInstruction(OpCodes.Ldarg_0),
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
                         new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(Pawn), nameof(Pawn.Drafted))),
                         new CodeInstruction(OpCodes.Brfalse_S, labelSkip),
-
-                            new CodeInstruction(OpCodes.Ldstr, $"test3"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
 
                         new CodeInstruction(OpCodes.Ldarg_0),
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
@@ -172,13 +158,14 @@ namespace RPEF
                         new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(HumanlikeFlyExtension), nameof(HumanlikeFlyExtension.alwaysFlyIfDrafted))).WithLabels(labelNullableSkip),
                         new CodeInstruction(OpCodes.Brfalse_S, labelSkip).WithLabels(labelNullableNull),
 
-                            new CodeInstruction(OpCodes.Ldstr, $"test"),
-                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+                        new CodeInstruction(OpCodes.Ldarg_0),
+                        new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(Pawn_FlightTracker), nameof(Pawn_FlightTracker.Flying))),
+                        new CodeInstruction(OpCodes.Brtrue_S, labelFlyingJump),
 
                         new CodeInstruction(OpCodes.Ldarg_0),
                         new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Pawn_FlightTracker), "StartFlyingInternal")),
 
-                        new CodeInstruction(OpCodes.Ldarg_1),
+                        new CodeInstruction(OpCodes.Ldarg_1).WithLabels(labelFlyingJump),
                         new CodeInstruction(OpCodes.Ldc_I4_1),
                         new CodeInstruction(OpCodes.Stfld, AccessTools.Field(typeof(Job), nameof(Job.flying))),
                         new CodeInstruction(OpCodes.Ret),

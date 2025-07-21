@@ -67,37 +67,5 @@ namespace RPEF
                 }
             }
         }
-
-        private static AnimationDef Pawn_FlightTracker_GetBestFlyAnimation_Injection(Pawn pawn)
-        {
-            var modExtension = pawn.def.GetModExtension<HumanlikeFlyExtension>();
-            if (modExtension != null)
-            {
-                var data = modExtension.animationData.FirstOrDefault(v => v.lifeStage == pawn.ageTracker.CurLifeStage);
-                if (data != null)
-                {
-                    var rot = pawn.Rotation;
-                    if (rot == Rot4.South)
-                    {
-                        return data.animationSouth;
-                    }
-                    else if (rot == Rot4.North)
-                    {
-                        return data.animationNorth;
-                    }
-                    else if (rot == Rot4.East)
-                    {
-                        return data.animationEast;
-                    }
-                    else
-                    {
-                        return data.animationWest;
-                    }
-                }
-            }
-
-            return null;
-        }
-
     }
 }

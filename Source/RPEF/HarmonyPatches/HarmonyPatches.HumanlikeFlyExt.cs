@@ -1,9 +1,11 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using Verse;
+using Verse.AI;
 
 namespace RPEF
 {
@@ -16,8 +18,43 @@ namespace RPEF
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_FlightTracker_GetBestFlyAnimation_Transpiler)));
 
             harmony.Patch(
-                original: AccessTools.PropertyGetter(typeof(Pawn_FlightTracker), nameof(Pawn_FlightTracker.CanFlyNow)),
-                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_FlightTracker_CanFlyNow_getter_Postfix)));
+                original: AccessTools.PropertyGetter(typeof(Pawn_FlightTracker), nameof(Pawn_FlightTracker.CanEverFly)),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_FlightTracker_CanEverFly_getter_Postfix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Pawn_FlightTracker), nameof(Pawn_FlightTracker.Notify_JobStarted)),
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_FlightTracker_Notify_JobStarted_Transpiler)));
+        }
+
+        private static AnimationDef Pawn_FlightTracker_GetBestFlyAnimation_Injection(Pawn pawn)
+        {
+            var modExtension = pawn.def.GetModExtension<HumanlikeFlyExtension>();
+            if (modExtension != null)
+            {
+                var data = modExtension.GetAnimationData(pawn.ageTracker.CurLifeStage);
+                if (data != null)
+                {
+                    var rot = pawn.Rotation;
+                    if (rot == Rot4.South)
+                    {
+                        return data.animationSouth;
+                    }
+                    else if (rot == Rot4.North)
+                    {
+                        return data.animationNorth;
+                    }
+                    else if (rot == Rot4.East)
+                    {
+                        return data.animationEast;
+                    }
+                    else
+                    {
+                        return data.animationWest;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static IEnumerable<CodeInstruction> Pawn_FlightTracker_GetBestFlyAnimation_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
@@ -49,39 +86,108 @@ namespace RPEF
             return instructions;
         }
 
-        private static void Pawn_FlightTracker_CanFlyNow_getter_Postfix(Pawn ___pawn, ref bool __result)
+        private static void Pawn_FlightTracker_CanEverFly_getter_Postfix(Pawn ___pawn, ref bool __result)
         {
-            if (__result && !___pawn.flight.Flying)
+            if (__result)
             {
                 var modExtension = ___pawn.def.GetModExtension<HumanlikeFlyExtension>();
-                if (modExtension != null)
+                if (modExtension != null && !modExtension.CheckCanEverFly(___pawn))
                 {
-                    var data = modExtension.animationData.FirstOrDefault(v => v.lifeStage == ___pawn.ageTracker.CurLifeStage);
-                    if (data != null)
-                    {
-                        if (modExtension.requireBodyParts != null)
-                        {
-                            for (int i = 0; i < ___pawn.health.hediffSet.hediffs.Count; ++i)
-                            {
-                                var hediff = ___pawn.health.hediffSet.hediffs[i];
-                                if (hediff is Hediff_MissingPart hediffMissingPart && hediffMissingPart.Part != null)
-                                {
-                                    for (int j = 0; j < modExtension.requireBodyParts.Count; ++j)
-                                    {
-                                        if (modExtension.requireBodyParts[j] == hediffMissingPart.Part.untranslatedCustomLabel)
-                                        {
-                                            __result = false;
-                                            return;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    __result = false;
                 }
-
-
             }
         }
+
+        private static IEnumerable<CodeInstruction> Pawn_FlightTracker_Notify_JobStarted_Transpiler(IEnumerable<CodeInstruction> codeInstructions, ILGenerator ilGenerator)
+        {
+            var instructions = codeInstructions.ToList();
+            var labelInjection = ilGenerator.DefineLabel();
+            var labelSkip = ilGenerator.DefineLabel();
+            var labelNullableSkip = ilGenerator.DefineLabel();
+            var labelNullableNull = ilGenerator.DefineLabel();
+
+            {
+                var index = instructions.FindIndex(
+                    v => v.opcode == OpCodes.Call &&
+                    v.OperandIs(AccessTools.PropertyGetter(typeof(Pawn_FlightTracker), nameof(Pawn_FlightTracker.CanEverFly))));
+
+                if (index >= 0)
+                {
+                    instructions[index + 1].operand = labelInjection;
+                }
+                else
+                {
+                    Log.Error($"[RPEF] Failed to find injection point for Pawn_FlightTracker_GetBestFlyAnimation_Transpiler");
+                }
+            }
+
+            {
+                var index = instructions.FindIndex(v => v.opcode == OpCodes.Ret);
+                if (index >= 0)
+                {
+                    var injectionIndex = index + 1;
+
+                    instructions[injectionIndex] = instructions[injectionIndex].WithLabels(labelSkip);
+                    instructions.InsertRange(injectionIndex, new CodeInstruction[]
+                    {
+                        new CodeInstruction(OpCodes.Ldarg_0).WithLabels(labelInjection),
+                            new CodeInstruction(OpCodes.Ldstr, $"1"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
+                        new CodeInstruction(OpCodes.Callvirt, AccessTools.PropertyGetter(typeof(Pawn), nameof(Pawn.Drafted))),
+                        new CodeInstruction(OpCodes.Brfalse_S, labelSkip),
+                            new CodeInstruction(OpCodes.Ldstr, $"2"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+
+
+                        new CodeInstruction(OpCodes.Ldarg_0),
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_FlightTracker), "pawn")),
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Thing), nameof(Thing.def))),
+                        new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Def), nameof(Def.GetModExtension), generics: new Type[] { typeof(HumanlikeFlyExtension) })),
+                        new CodeInstruction(OpCodes.Dup),
+                            new CodeInstruction(OpCodes.Ldstr, $"3"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+
+                        new CodeInstruction(OpCodes.Brtrue_S, labelNullableSkip),
+                            new CodeInstruction(OpCodes.Ldstr, $"4"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+
+
+                        new CodeInstruction(OpCodes.Pop),
+                        new CodeInstruction(OpCodes.Ldc_I4_0),
+                            new CodeInstruction(OpCodes.Ldstr, $"5"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+
+                        new CodeInstruction(OpCodes.Br_S, labelNullableNull),
+                            new CodeInstruction(OpCodes.Ldstr, $"6"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+
+                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(HumanlikeFlyExtension), nameof(HumanlikeFlyExtension.alwaysFlyIfDrafted))).WithLabels(labelNullableSkip),
+                            new CodeInstruction(OpCodes.Ldstr, $"7"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+                        new CodeInstruction(OpCodes.Brfalse_S, labelSkip).WithLabels(labelNullableNull),
+
+                            new CodeInstruction(OpCodes.Ldstr, $"8"),
+                            new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), nameof(Log.Message), parameters: new Type[] { typeof(string) })),
+
+                        new CodeInstruction(OpCodes.Ldarg_0),
+                        new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Pawn_FlightTracker), "StartFlyingInternal")),
+
+                        new CodeInstruction(OpCodes.Ldarg_1),
+                        new CodeInstruction(OpCodes.Ldc_I4_1),
+                        new CodeInstruction(OpCodes.Stfld, AccessTools.Field(typeof(Job), nameof(Job.flying))),
+                        new CodeInstruction(OpCodes.Ret),
+                    });
+                }
+                else
+                {
+                    Log.Error($"[RPEF] Failed to find injection point for Pawn_FlightTracker_GetBestFlyAnimation_Transpiler");
+                }
+            }
+
+            return instructions;
+        }
+
     }
 }

@@ -393,9 +393,9 @@ namespace RPEF
         {
             if (additionalSavedPawnDataForMods != null && additionalSavedPawnDataForMods.TryGetValue(CompStatueDictKey, out var td))
             {
-                if (td != null && thingDef == ThingDefOf.Human)
+                if (td != null && td is ThingDef newThingDef && thingDef == ThingDefOf.Human)
                 {
-                    return (ThingDef)td;
+                    return newThingDef;
                 }
             }
 

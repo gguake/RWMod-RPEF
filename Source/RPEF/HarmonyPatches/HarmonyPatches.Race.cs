@@ -380,45 +380,111 @@ namespace RPEF
             }
         }
 
-        private const string CompStatueDictKey = "_RPEF_ThingDef";
+        public class CompStatueRPEFInfo : IExposable
+        {
+            public ThingDef thingDef;
+            public PawnKindDef pawnKindDef;
+
+            public void ExposeData()
+            {
+                Scribe_Defs.Look(ref thingDef, "thingDef");
+                Scribe_Defs.Look(ref pawnKindDef, "pawnKindDef");
+            }
+        }
+
+        private const string CompStatueDictKey = "_RPEF_StatueInfo";
         private static void CompStatue_CreateSnapshotOfPawn_HookForMods_Postfix(Pawn p, Dictionary<string, object> dictToStoreDataIn)
         {
-            if (p.def != ThingDefOf.Human)
+            dictToStoreDataIn.Add(CompStatueDictKey, new CompStatueRPEFInfo()
             {
-                dictToStoreDataIn.Add(CompStatueDictKey, p.def);
-            }
+                thingDef = p.def,
+                pawnKindDef = p.kindDef,
+            });
         }
 
-        private static ThingDef CompStatue_InitFakePawn_Injection(ThingDef thingDef, Dictionary<string, object> additionalSavedPawnDataForMods)
-        {
-            if (additionalSavedPawnDataForMods != null && additionalSavedPawnDataForMods.TryGetValue(CompStatueDictKey, out var td))
-            {
-                if (td != null && td is ThingDef newThingDef && thingDef == ThingDefOf.Human)
-                {
-                    return newThingDef;
-                }
-            }
-
-            return thingDef;
-        }
-        private static IEnumerable<CodeInstruction> CompStatue_InitFakePawn_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
+        private static IEnumerable<CodeInstruction> CompStatue_InitFakePawn_Transpiler(IEnumerable<CodeInstruction> codeInstructions, ILGenerator ilGenerator)
         {
             var instructions = codeInstructions.ToList();
 
-            var index = instructions.FindIndex(
+            var thingDefInjectionIndex = instructions.FindIndex(
                 v =>
                 v.opcode == OpCodes.Ldsfld &&
                 v.OperandIs(AccessTools.Field(typeof(ThingDefOf), nameof(ThingDefOf.Human))));
 
-            if (index >= 0)
+            if (thingDefInjectionIndex >= 0)
             {
-                var injectionIndex = index + 1;
+                var injectionIndex = thingDefInjectionIndex + 1;
 
+                var localObject = ilGenerator.DeclareLocal(typeof(object));
+                var labelNullCheckJump = ilGenerator.DefineLabel();
+
+                instructions[injectionIndex] = instructions[injectionIndex].WithLabels(labelNullCheckJump);
                 instructions.InsertRange(injectionIndex, new CodeInstruction[]
                 {
                     new CodeInstruction(OpCodes.Ldarg_0),
                     new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(CompStatue_InitFakePawn_Injection)))
+                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
+
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
+                    new CodeInstruction(OpCodes.Ldstr, CompStatueDictKey),
+                    new CodeInstruction(OpCodes.Ldloca_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<string, object>), "TryGetValue")),
+                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
+
+                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
+
+                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.thingDef))),
+                    new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(ThingDefOf), nameof(ThingDefOf.Human))),
+                    new CodeInstruction(OpCodes.Beq_S, labelNullCheckJump),
+
+                    new CodeInstruction(OpCodes.Pop),
+                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.thingDef))),
+                });
+            }
+
+            var pawnKindDefInjectionIndex = instructions.FindIndex(
+                v =>
+                v.opcode == OpCodes.Ldsfld &&
+                v.OperandIs(AccessTools.Field(typeof(PawnKindDefOf), nameof(PawnKindDefOf.Colonist))));
+
+            if (pawnKindDefInjectionIndex >= 0)
+            {
+                var injectionIndex = pawnKindDefInjectionIndex + 1;
+
+                var localObject = ilGenerator.DeclareLocal(typeof(object));
+                var labelNullCheckJump = ilGenerator.DefineLabel();
+
+                instructions[injectionIndex] = instructions[injectionIndex].WithLabels(labelNullCheckJump);
+                instructions.InsertRange(injectionIndex, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
+                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
+
+                    new CodeInstruction(OpCodes.Ldarg_0),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
+                    new CodeInstruction(OpCodes.Ldstr, CompStatueDictKey),
+                    new CodeInstruction(OpCodes.Ldloca_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<string, object>), "TryGetValue")),
+                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
+
+                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
+
+                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.pawnKindDef))),
+                    new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(PawnKindDefOf), nameof(PawnKindDefOf.Colonist))),
+                    new CodeInstruction(OpCodes.Beq_S, labelNullCheckJump),
+
+                        new CodeInstruction(OpCodes.Ldstr, "5"),
+                        new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), "Message", parameters: new Type[] { typeof(string) })),
+                    new CodeInstruction(OpCodes.Pop),
+                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.pawnKindDef))),
                 });
             }
 

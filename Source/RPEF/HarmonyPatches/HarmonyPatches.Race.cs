@@ -480,8 +480,6 @@ namespace RPEF
                     new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(PawnKindDefOf), nameof(PawnKindDefOf.Colonist))),
                     new CodeInstruction(OpCodes.Beq_S, labelNullCheckJump),
 
-                        new CodeInstruction(OpCodes.Ldstr, "5"),
-                        new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Log), "Message", parameters: new Type[] { typeof(string) })),
                     new CodeInstruction(OpCodes.Pop),
                     new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
                     new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.pawnKindDef))),

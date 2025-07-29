@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Xml;
 using Verse;
@@ -39,7 +40,7 @@ namespace RPEF
 
                 harmony.Patch(
                     original: AccessTools.Method(typeof(DynamicPawnRenderNodeSetup_Apparel), "ProcessApparel"),
-                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(DynamicPawnRenderNodeSetup_Apparel_ProcessApparel)));
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(DynamicPawnRenderNodeSetup_Apparel_ProcessApparel_Postfix)));
 
                 PatchRace(harmony);
                 PatchXML(harmony);
@@ -143,27 +144,59 @@ namespace RPEF
             }
         }
 
-        private static void DynamicPawnRenderNodeSetup_Apparel_ProcessApparel(ref IEnumerable<(PawnRenderNode node, PawnRenderNode parent)> __result, PawnRenderTree tree, Apparel ap)
+        private static FieldInfo _field_PawnRenderTree_nodesByTag = AccessTools.Field(typeof(PawnRenderTree), "nodesByTag");
+        private static void DynamicPawnRenderNodeSetup_Apparel_ProcessApparel_Postfix(
+            ref IEnumerable<(PawnRenderNode node, PawnRenderNode parent)> __result, 
+            Pawn pawn, 
+            PawnRenderTree tree)
         {
             var result = new List<(PawnRenderNode node, PawnRenderNode parent)>();
             foreach (var tuple in __result)
             {
                 if (tuple.node is PawnRenderNode_ApparelBase)
                 {
-                    PawnRenderNodeTagDef abstractParentApparelTagDef = tuple.node.Props.parentTagDef;
+                    var nodesByTag = _field_PawnRenderTree_nodesByTag.GetValue(tree) as Dictionary<PawnRenderNodeTagDef, PawnRenderNode>;
+                    var apparelWornIndex = pawn.apparel.WornApparel.IndexOf(tuple.node.apparel);
+
+                    var abstractParentApparelTagDef = tuple.node.Props.parentTagDef;
                     if (tuple.node.Props.parentTagDef == null)
                     {
-                        abstractParentApparelTagDef = (ap.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || ap.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
-                        PawnRenderNodeTagDefOf.ApparelHead :
-                        PawnRenderNodeTagDefOf.ApparelBody;
+                        abstractParentApparelTagDef = (tuple.node.apparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || tuple.node.apparel.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
+                            PawnRenderNodeTagDefOf.ApparelHead :
+                            PawnRenderNodeTagDefOf.ApparelBody;
                     }
 
                     PawnRenderNode parentNode = null;
                     if (abstractParentApparelTagDef != null)
                     {
-                        tree.TryGetNodeByTag(abstractParentApparelTagDef, out parentNode);
+                        if (!tree.TryGetNodeByTag(abstractParentApparelTagDef, out parentNode))
+                        {
+                            parentNode = nodesByTag[abstractParentApparelTagDef];
+                        }
                     }
 
+                    int layerOffset = 0;
+                    for (int i = 0; i < apparelWornIndex; ++i)
+                    {
+                        var wornApparel = pawn.apparel.WornApparel[i];
+                        if (wornApparel.def.IsApparel)
+                        {
+                            var parentTagDef = wornApparel.def.apparel.parentTagDef;
+                            if (parentTagDef == null)
+                            {
+                                parentTagDef = (wornApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead || wornApparel.def.apparel.LastLayer == ApparelLayerDefOf.EyeCover) ?
+                                    PawnRenderNodeTagDefOf.ApparelHead :
+                                    PawnRenderNodeTagDefOf.ApparelBody;
+                            }
+
+                            if (abstractParentApparelTagDef == parentTagDef)
+                            {
+                                layerOffset++;
+                            }
+                        }
+                    }
+
+                    tuple.node.Props.baseLayer = (parentNode?.Props.baseLayer ?? 0) + layerOffset;
                     result.Add((tuple.node, parentNode));
                 }
                 else

@@ -68,6 +68,7 @@
     <Compile Include="Constraints\Implementations\TraitConstraint.cs" />
     <Compile Include="Constraints\Implementations\XenotypeConstraint.cs" />
     <Compile Include="Constraints\ConstraintExtension.cs" />
+    <Compile Include="CustomDefs\ScaleableHairDef.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.HumanlikeFlyExt.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.Race.cs" />

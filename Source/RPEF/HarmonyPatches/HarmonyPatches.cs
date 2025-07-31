@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Xml;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -41,6 +42,10 @@ namespace RPEF
                 harmony.Patch(
                     original: AccessTools.Method(typeof(DynamicPawnRenderNodeSetup_Apparel), "ProcessApparel"),
                     postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(DynamicPawnRenderNodeSetup_Apparel_ProcessApparel_Postfix)));
+
+                harmony.Patch(
+                    original: AccessTools.Method(typeof(PawnRenderNode_Hair), nameof(PawnRenderNode_Hair.MeshSetFor)),
+                    transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnRenderNode_Hair_MeshSetFor_Transpiler)));
 
                 PatchRace(harmony);
                 PatchXML(harmony);
@@ -206,6 +211,47 @@ namespace RPEF
             }
 
             __result = result;
+        }
+
+        private static IEnumerable<CodeInstruction> PawnRenderNode_Hair_MeshSetFor_Transpiler(IEnumerable<CodeInstruction> codeInstructions, ILGenerator ilGenerator)
+        {
+            var instructions = codeInstructions.ToList();
+
+            var index = instructions.FirstIndexOf(v => v.opcode == OpCodes.Call && v.OperandIs(AccessTools.Method(typeof(HumanlikeMeshPoolUtility), nameof(HumanlikeMeshPoolUtility.GetHumanlikeHairSetForPawn))));
+            if (index >= 0)
+            {
+                var localScale = ilGenerator.DeclareLocal(typeof(Vector2));
+                var labelJump = ilGenerator.DefineLabel();
+                var labelSkip = ilGenerator.DefineLabel();
+                var injectionIndex = index - 2;
+
+                instructions[injectionIndex] = instructions[injectionIndex].WithLabels(labelSkip);
+                instructions[index] = instructions[index].WithLabels(labelJump);
+                instructions.InsertRange(injectionIndex, new CodeInstruction[]
+                {
+                    new CodeInstruction(OpCodes.Ldarg_1),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn), nameof(Pawn.story))),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_StoryTracker), nameof(Pawn_StoryTracker.hairDef))),
+                    new CodeInstruction(OpCodes.Isinst, typeof(ScaleableHairDef)),
+                    new CodeInstruction(OpCodes.Brfalse_S, labelSkip),
+
+                    new CodeInstruction(OpCodes.Ldarg_1),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn), nameof(Pawn.story))),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Pawn_StoryTracker), nameof(Pawn_StoryTracker.hairDef))),
+                    new CodeInstruction(OpCodes.Castclass, typeof(ScaleableHairDef)),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ScaleableHairDef), nameof(ScaleableHairDef.scale))),
+                    new CodeInstruction(OpCodes.Stloc_S, localScale.LocalIndex),
+
+                    new CodeInstruction(OpCodes.Ldloc_S, localScale.LocalIndex),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Vector2), nameof(Vector2.x))),
+
+                    new CodeInstruction(OpCodes.Ldloc_S, localScale.LocalIndex),
+                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Vector2), nameof(Vector2.y))),
+                    new CodeInstruction(OpCodes.Br_S, labelJump),
+                });
+            }
+
+            return instructions;
         }
     }
 }

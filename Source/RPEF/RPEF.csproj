@@ -86,6 +86,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RenderNode\Apparel\PawnRenderNode_ApparelBase.cs" />
     <Compile Include="RenderNode\PawnRenderNodeWorker_BodyTypeDrawData.cs" />
+    <Compile Include="RenderNode\PawnRenderNodeWorker_CustomHair.cs" />
     <Compile Include="RenderNode\PawnRenderNode_BodyOverride.cs" />
     <Compile Include="RenderNode\PawnRenderNode_HairConstant.cs" />
     <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />

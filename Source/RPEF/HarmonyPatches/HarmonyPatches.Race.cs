@@ -85,6 +85,10 @@ namespace RPEF
             harmony.Patch(
                 original: AccessTools.Method(typeof(CompStatue), "InitFakePawn"),
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(CompStatue_InitFakePawn_Transpiler)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.AdjustXenotypeForFactionlessPawn)),
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_AdjustXenotypeForFactionlessPawn_Prefix)));
         }
 
         private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request)
@@ -487,6 +491,17 @@ namespace RPEF
             }
 
             return instructions;
+        }
+
+        private static bool PawnGenerator_AdjustXenotypeForFactionlessPawn_Prefix(Pawn pawn, ref PawnGenerationRequest request, ref XenotypeDef xenotype)
+        {
+            var pawnGenHook = request.KindDef.race.GetModExtension<PawnGeneratorRaceHook>();
+            if (pawnGenHook != null && pawnGenHook.forcedXenotype != null && pawnGenHook.forcedXenotype == xenotype)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

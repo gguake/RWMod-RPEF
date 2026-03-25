@@ -9,9 +9,16 @@ namespace RPEF
         {
             if (!base.CanDrawNow(node, parms)) { return false; }
 
-            if (!parms.pawn.DeadOrDowned && parms.pawn.Awake()) { return false; }
+            if (parms.pawn.Dead) { return true; }
 
-            return true;
+            if (parms.pawn.Downed && !parms.pawn.Awake()) { return true; }
+
+            return false;
+        }
+
+        protected override Graphic GetGraphic(PawnRenderNode node, PawnDrawParms parms)
+        {
+            return base.GetGraphic(node, parms);
         }
     }
 }

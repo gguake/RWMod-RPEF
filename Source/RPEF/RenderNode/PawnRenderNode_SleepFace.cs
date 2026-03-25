@@ -3,9 +3,9 @@ using Verse;
 
 namespace RPEF
 {
-    public class PawnRenderNode_HeadMesh : PawnRenderNode_Head
+    public class PawnRenderNode_SleepFace : PawnRenderNode_Head
     {
-        public PawnRenderNode_HeadMesh(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree) 
+        public PawnRenderNode_SleepFace(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree) 
             : base(pawn, props, tree)
         {
         }
@@ -17,7 +17,10 @@ namespace RPEF
                 return null;
             }
 
-            var path = TexPathFor(pawn);
+            var modExtension = pawn.story.headType.GetModExtension<SleepFaceHeadHook>();
+            if (modExtension == null || modExtension.sleepGraphicPath == null) { return null; }
+
+            var path = modExtension.sleepGraphicPath;
             if (path.NullOrEmpty())
             {
                 return null;

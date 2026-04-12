@@ -17,9 +17,9 @@ namespace RPEF
             _lastPawnCacheRefreshTicks = 0;
         }
 
-        public static IEnumerable<Constraint> GetAllConstraintsOfDef(this Def def, ConstraintRuleFlag rule)
+        public static void GetAllConstraintsOfDef(this Def def, ConstraintRuleFlag rule, List<Constraint> outList)
         {
-            if (def == null) { yield break; }
+            if (def == null) { return; }
 
             if (!_defConstraintCache.TryGetValue(def, out var constraints))
             {
@@ -59,15 +59,15 @@ namespace RPEF
                 {
                     if ((constraints[i].rule & rule) != ConstraintRuleFlag.None)
                     {
-                        yield return constraints[i];
+                        outList.Add(constraints[i]);
                     }
                 }
             }
         }
 
-        public static IEnumerable<Constraint> GetAllConstraintsOfPawn(Pawn pawn)
+        public static void GetAllConstraintsOfPawn(this Pawn pawn, List<Constraint> outList)
         {
-            if (pawn == null) { yield break; }
+            if (pawn == null) { return; }
 
             if (GenTicks.TicksGame != _lastPawnCacheRefreshTicks)
             {
@@ -81,7 +81,7 @@ namespace RPEF
                 result = new List<Constraint>();
 
                 // Race
-                result.AddRange(pawn.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                pawn.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
 
                 // Equipments
                 var equipments = pawn.equipment?.AllEquipmentListForReading;
@@ -89,7 +89,7 @@ namespace RPEF
                 {
                     foreach (var equipment in equipments)
                     {
-                        result.AddRange(equipment.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        equipment.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
                 }
 
@@ -99,7 +99,7 @@ namespace RPEF
                 {
                     foreach (var apparel in apparels)
                     {
-                        result.AddRange(apparel.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        apparel.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
                 }
 
@@ -108,23 +108,23 @@ namespace RPEF
                     // Backstory
                     if (pawn.story.Childhood != null)
                     {
-                        result.AddRange(pawn.story.Childhood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        pawn.story.Childhood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
                     if (pawn.story.Adulthood != null)
                     {
-                        result.AddRange(pawn.story.Adulthood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        pawn.story.Adulthood.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
 
                     // BodyType
-                    result.AddRange(pawn.story.bodyType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                    pawn.story.bodyType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
 
                     // HeadType
-                    result.AddRange(pawn.story.headType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                    pawn.story.headType.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
 
                     // Hair
                     if (pawn.story.hairDef != null)
                     {
-                        result.AddRange(pawn.story.hairDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        pawn.story.hairDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
 
                     // Trait
@@ -133,7 +133,7 @@ namespace RPEF
                     {
                         foreach (var trait in traits)
                         {
-                            result.AddRange(trait.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                            trait.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                         }
                     }
                 }
@@ -144,7 +144,7 @@ namespace RPEF
                 {
                     foreach (var hediff in hediffs)
                     {
-                        result.AddRange(hediff.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        hediff.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
                 }
 
@@ -153,17 +153,17 @@ namespace RPEF
                     // Beard
                     if (pawn.style.beardDef != null)
                     {
-                        result.AddRange(pawn.style.beardDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        pawn.style.beardDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
 
                     // Tattoo
                     if (pawn.style.FaceTattoo != null)
                     {
-                        result.AddRange(pawn.style.FaceTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        pawn.style.FaceTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
                     if (pawn.style.BodyTattoo != null)
                     {
-                        result.AddRange(pawn.style.BodyTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        pawn.style.BodyTattoo.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
                 }
 
@@ -173,33 +173,30 @@ namespace RPEF
                 {
                     foreach (var memory in memories)
                     {
-                        result.AddRange(memory.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                        memory.def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                     }
                 }
 
                 // Xenotype
                 if (pawn.genes?.Xenotype != null)
                 {
-                    result.AddRange(pawn.genes.Xenotype.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn));
+                    pawn.genes.Xenotype.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, result);
                 }
-
-                if (result.Count == 0) { result = null; }
 
                 _pawnConstraintCache.Add(pawn.thingIDNumber, result);
             }
 
-            if (result == null) { yield break; }
-
-            foreach (var constarint in result)
-            {
-                yield return constarint;
-            }
+            outList.AddRange(result);
         }
 
+        private static List<Constraint> _tmpConstraints = new List<Constraint>();
         public static bool CheckAllConstraints(this Def def, Pawn pawn, out Constraint failedConstraint)
         {
-            foreach (var constraint in GetAllConstraintsOfDef(def, ConstraintRuleFlag.OnApplyPawn))
+            _tmpConstraints.Clear();
+            def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnApplyPawn, _tmpConstraints);
+            for (int i = 0; i < _tmpConstraints.Count; ++i)
             {
+                var constraint = _tmpConstraints[i];
                 if (!constraint.Check(pawn))
                 {
                     failedConstraint = constraint;
@@ -212,8 +209,11 @@ namespace RPEF
                 }
             }
 
-            foreach (var constraint in GetAllConstraintsOfPawn(pawn))
+            _tmpConstraints.Clear();
+            pawn.GetAllConstraintsOfPawn(_tmpConstraints);
+            for (int i = 0; i < _tmpConstraints.Count; ++i)
             {
+                var constraint = _tmpConstraints[i];
                 if (!constraint.Check(def)) 
                 {
                     failedConstraint = constraint;
@@ -232,8 +232,11 @@ namespace RPEF
 
         public static bool CheckAllConstraints(this Def def, ThingDef pawnDef, out Constraint failedConstraint)
         {
-            foreach (var constraint in GetAllConstraintsOfDef(def, ConstraintRuleFlag.OnApplyPawn))
+            _tmpConstraints.Clear();
+            def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnApplyPawn, _tmpConstraints);
+            for (int i = 0; i < _tmpConstraints.Count; ++i)
             {
+                var constraint = _tmpConstraints[i];
                 if (!constraint.Check(pawnDef))
                 {
                     failedConstraint = constraint;
@@ -247,8 +250,11 @@ namespace RPEF
             }
 
             // Race
-            foreach (var constraint in pawnDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn))
+            _tmpConstraints.Clear();
+            pawnDef.GetAllConstraintsOfDef(ConstraintRuleFlag.OnAppliedPawn, _tmpConstraints);
+            for (int i = 0; i < _tmpConstraints.Count; ++i)
             {
+                var constraint = _tmpConstraints[i];
                 if (!constraint.Check(def)) 
                 {
                     failedConstraint = constraint;

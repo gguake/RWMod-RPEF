@@ -54,6 +54,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ShootExt\CompEquippableVerbMode.cs" />
     <Compile Include="Comps\CompTrailRenderer.cs" />
     <Compile Include="Comps\LineRendererManager.cs" />
     <Compile Include="Constraints\Constraint.cs" />
@@ -95,9 +96,8 @@
     <Compile Include="RenderNode\PawnRenderNode_SleepFace.cs" />
     <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />
     <Compile Include="RPEFMod.cs" />
-    <Compile Include="ShootExt\ShootExtWorker.cs" />
     <Compile Include="ThinkNode\ThinkNode_ConditionalRace.cs" />
-    <Compile Include="ShootExt\Verb_ShootExt.cs" />
+    <Compile Include="ShootExt\Verb_ShootWithMode.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

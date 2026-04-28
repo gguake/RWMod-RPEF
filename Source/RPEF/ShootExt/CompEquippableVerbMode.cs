@@ -214,7 +214,7 @@ namespace RPEF
                 else
                 {
                     var mode = PrimaryComp.Props.modes[(PrimaryComp.CurrentVerbModeIndex + 1) % 2];
-                    return mode.changeGizmoLabel ?? mode.label;
+                    return mode.changeGizmoLabel ?? mode.label ?? base.Label;
                 }
             }
         }
@@ -230,7 +230,7 @@ namespace RPEF
                 else
                 {
                     var mode = PrimaryComp.Props.modes[(PrimaryComp.CurrentVerbModeIndex + 1) % 2];
-                    return mode.changeGizmoDescription ?? mode.description;
+                    return mode.changeGizmoDescription ?? mode.description ?? base.Desc;
                 }
             }
         }

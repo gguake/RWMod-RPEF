@@ -8,9 +8,16 @@ using Verse;
 
 namespace RPEF
 {
+    /// <summary>
+    /// CompEquippableVerbMode가 있어야 정상 동작
+    /// </summary>
     public class Verb_ShootWithMode : Verb_Shoot
     {
         public CompEquippableVerbMode EquipmentCompVerbModeSource => DirectOwner as CompEquippableVerbMode;
+
+        public override Texture2D UIIcon =>
+            EquipmentCompVerbModeSource?.CurrentVerbMode.UIIcon ??
+            base.UIIcon;
 
         protected override int ShotsPerBurst => 
             EquipmentCompVerbModeSource?.CurrentVerbMode.shotsPerBurstOverride ??

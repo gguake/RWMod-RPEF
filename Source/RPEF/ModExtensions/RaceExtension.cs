@@ -35,6 +35,21 @@ namespace RPEF
         private Dictionary<ThoughtDef, ThoughtDef> _thoughtReplacerDict;
         public List<ThoughtReplacer> thoughtReplacer;
 
+        public Dictionary<ThoughtDef, ThoughtDef> ThoughtReplacerInverse
+        {
+            get
+            {
+                if (_thoughtReplacerInvDict == null)
+                {
+                    _thoughtReplacerInvDict = thoughtReplacerInv?.ToDictionary(v => v.thoughtDef, v => v.replacedThoughtDef) ?? new Dictionary<ThoughtDef, ThoughtDef>();
+                }
+
+                return _thoughtReplacerInvDict;
+            }
+        }
+        private Dictionary<ThoughtDef, ThoughtDef> _thoughtReplacerInvDict;
+        public List<ThoughtReplacer> thoughtReplacerInv;
+
         public bool sterile = false;
 
         public List<int> growthMomentAgeOverride;

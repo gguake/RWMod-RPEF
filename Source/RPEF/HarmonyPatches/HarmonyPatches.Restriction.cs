@@ -264,6 +264,8 @@ namespace RPEF
             var extension = ___pawn.def.GetModExtension<RaceExtension>();
             if (extension != null && extension.ThoughtReplacer.TryGetValue(mem, out var replacedThoughtDef))
             {
+                if (replacedThoughtDef == null) { return false; }
+
                 mem = replacedThoughtDef;
             }
 
@@ -280,6 +282,8 @@ namespace RPEF
             var extension = ___pawn.def.GetModExtension<RaceExtension>();
             if (extension != null && extension.ThoughtReplacer.TryGetValue(mem, out var replacedThoughtDef))
             {
+                if (replacedThoughtDef == null) { return false; }
+
                 mem = replacedThoughtDef;
             }
 
@@ -293,14 +297,35 @@ namespace RPEF
                 return false;
             }
 
-            var extension = ___pawn.def.GetModExtension<RaceExtension>();
-            if (extension != null && extension.ThoughtReplacer.TryGetValue(newThought.def, out var replacedThoughtDef))
+            var pawnRaceExtension = ___pawn.def.GetModExtension<RaceExtension>();
+            if (pawnRaceExtension != null)
             {
-                var replacedThought = ThoughtMaker.MakeThought(replacedThoughtDef, newThought.sourcePrecept);
-                replacedThought.SetForcedStage(newThought.CurStageIndex);
+                if (pawnRaceExtension.ThoughtReplacer.TryGetValue(newThought.def, out var replacedThoughtDef))
+                {
+                    if (replacedThoughtDef == null) { return false; }
 
-                __instance.TryGainMemory(replacedThought, otherPawn);
-                return false;
+                    var replacedThought = ThoughtMaker.MakeThought(replacedThoughtDef, newThought.sourcePrecept);
+                    replacedThought.SetForcedStage(newThought.CurStageIndex);
+
+                    __instance.TryGainMemory(replacedThought, otherPawn);
+                    return false;
+                }
+            }
+
+
+            var otherPawnRaceExtension = otherPawn?.def.GetModExtension<RaceExtension>();
+            if (otherPawnRaceExtension != null)
+            {
+                if (otherPawnRaceExtension.ThoughtReplacerInverse.TryGetValue(newThought.def, out var replacedThoughtDef))
+                {
+                    if (replacedThoughtDef == null) { return false; }
+
+                    var replacedThought = ThoughtMaker.MakeThought(replacedThoughtDef, newThought.sourcePrecept);
+                    replacedThought.SetForcedStage(newThought.CurStageIndex);
+
+                    __instance.TryGainMemory(replacedThought, otherPawn);
+                    return false;
+                }
             }
 
             return true;

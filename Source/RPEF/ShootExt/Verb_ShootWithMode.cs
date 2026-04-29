@@ -116,11 +116,13 @@ namespace RPEF
         {
             if (verb is Verb_ShootWithMode verbShootExt)
             {
-                var projectileCount = verbShootExt.EquipmentCompVerbModeSource?.CurrentVerbMode.projectilesPerShot;
+                projectile.Launch(launcher, origin, usedTarget, intendedTarget, hitFlags, preventFriendlyFire, equipment, targetCoverDef);
 
-                for (int i = 0; i < projectileCount; ++i)
+                var projectileCount = verbShootExt.EquipmentCompVerbModeSource?.CurrentVerbMode.projectilesPerShot;
+                for (int i = 1; i < projectileCount; ++i)
                 {
-                    projectile.Launch(launcher, origin, usedTarget, intendedTarget, hitFlags, preventFriendlyFire, equipment, targetCoverDef);
+                    var subProjectile = (Projectile)GenSpawn.Spawn(projectile.def, projectile.Position, projectile.Map);
+                    subProjectile.Launch(launcher, origin, usedTarget, intendedTarget, hitFlags, preventFriendlyFire, equipment, targetCoverDef);
                 }
             }
             else

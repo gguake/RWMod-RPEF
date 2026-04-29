@@ -116,6 +116,29 @@ namespace RPEF
         {
             compClass = typeof(CompEquippableVerbMode);
         }
+
+        private HashSet<StatDef> _tmpStats = new HashSet<StatDef>();
+        public void ClearStatCache(Thing thing)
+        {
+            _tmpStats.Clear();
+            for (int i = 0; i < modes.Count; ++i)
+            {
+                if (modes[i].statOffsets != null)
+                {
+                    _tmpStats.AddRange(modes[i].statOffsets.Select(e => e.stat));
+                }
+
+                if (modes[i].statFactors != null)
+                {
+                    _tmpStats.AddRange(modes[i].statFactors.Select(e => e.stat));
+                }
+            }
+
+            foreach (var stat in _tmpStats)
+            {
+                stat.Worker.ClearCacheForThing(thing);
+            }
+        }
     }
 
     public class CompEquippableVerbMode : CompEquippable
@@ -144,6 +167,11 @@ namespace RPEF
 
         public override IEnumerable<Gizmo> CompGetEquippedGizmosExtra()
         {
+            foreach (var gizmo in base.CompGetEquippedGizmosExtra())
+            {
+                yield return gizmo;
+            }
+
             if (Holder?.Drafted != true || Props.modes.NullOrEmpty() || Props.modes.Count < 2)
             {
                 yield break;
@@ -185,6 +213,8 @@ namespace RPEF
                 var waitJob = JobMaker.MakeJob(JobDefOf.Wait, ticks, true);
                 pawn.jobs.StartJob(waitJob, JobCondition.InterruptForced);
             }
+
+            Props.ClearStatCache(parent);
         }
     }
 

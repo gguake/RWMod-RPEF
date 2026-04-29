@@ -4,6 +4,9 @@ using Verse;
 
 namespace RPEF
 {
+    /// <summary>
+    /// 대상에게 트레일을 남기는 컴포넌트. 틱마다 현재 위치를 기록해 잔상을 남김.
+    /// </summary>
     public class CompProperties_TrailRenderer : CompProperties
     {
         public string texPath;

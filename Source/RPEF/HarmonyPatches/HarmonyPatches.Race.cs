@@ -77,7 +77,7 @@ namespace RPEF
                 original: AccessTools.Method(typeof(InteractionWorker_RomanceAttempt), nameof(InteractionWorker_RomanceAttempt.SuccessChance)),
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(InteractionWorker_RomanceAttempt_SuccessChance_Postfix)));
 
-            // 조각상 관련
+            #region 조각상 관련
             harmony.Patch(
                 original: AccessTools.Method(typeof(CompStatue), "CreateSnapshotOfPawn_HookForMods"),
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(CompStatue_CreateSnapshotOfPawn_HookForMods_Postfix)));
@@ -85,10 +85,21 @@ namespace RPEF
             harmony.Patch(
                 original: AccessTools.Method(typeof(CompStatue), "InitFakePawn"),
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(CompStatue_InitFakePawn_Transpiler)));
+            #endregion
 
             harmony.Patch(
                 original: AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.AdjustXenotypeForFactionlessPawn)),
                 prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_AdjustXenotypeForFactionlessPawn_Prefix)));
+
+            #region 유전자 가리기 옵션
+            harmony.Patch(
+                original: AccessTools.Method(typeof(ITab_Genes), nameof(ITab_Genes.CanShowGenesTab)),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(ITab_Genes_CanShowGenesTab_Postfix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(CharacterCardUtility), "DoTopStack"),
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(CharacterCardUtility_DoTopStack_Transpiler)));
+            #endregion
         }
 
         private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request)
@@ -502,6 +513,49 @@ namespace RPEF
             }
 
             return true;
+        }
+
+        private static void ITab_Genes_CanShowGenesTab_Postfix(ref bool __result)
+        {
+            if (!__result)
+                return;
+
+            Thing selected = Find.Selector.SingleSelectedThing;
+            Pawn pawn = selected as Pawn ?? (selected as Corpse)?.InnerPawn;
+
+            if (pawn != null && pawn.def.GetModExtension<RaceExtension>()?.hideGenes == true)
+            {
+                __result = false;
+            }
+        }
+
+        private static IEnumerable<CodeInstruction> CharacterCardUtility_DoTopStack_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            var codes = instructions.ToList();
+            var propertyGetterGenesList = AccessTools.PropertyGetter(typeof(Pawn_GeneTracker), nameof(Pawn_GeneTracker.GenesListForReading));
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                yield return codes[i];
+
+                if (codes[i].Calls(propertyGetterGenesList))
+                {
+                    i++;
+                    yield return codes[i];
+
+                    if (i + 1 < codes.Count && (codes[i + 1].opcode == OpCodes.Brfalse || codes[i + 1].opcode == OpCodes.Brfalse_S))
+                    {
+                        var skipLabel = codes[i + 1].operand;
+
+                        i++;
+                        yield return codes[i];
+
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RaceExtension), nameof(RaceExtension.HideGenes)));
+                        yield return new CodeInstruction(OpCodes.Brtrue, skipLabel);
+                    }
+                }
+            }
         }
     }
 }

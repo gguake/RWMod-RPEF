@@ -19,6 +19,9 @@ namespace RPEF
         }
     }
 
+    /// <summary>
+    /// 비행하는 Humanlike Pawn을 구현하기 위한 Extension
+    /// </summary>
     public class HumanlikeFlyExtension : DefModExtension
     {
         public HumanlikeFlyAnimationData GetAnimationData(LifeStageDef def)
@@ -35,9 +38,19 @@ namespace RPEF
         [Unsaved]
         private Dictionary<LifeStageDef, HumanlikeFlyAnimationData> _dictLifestageAnimationData = new System.Collections.Generic.Dictionary<LifeStageDef, HumanlikeFlyAnimationData>();
 
+        /// <summary>
+        /// 비행시 재생할 애니메이션
+        /// </summary>
         public List<HumanlikeFlyAnimationData> animationData;
+
+        /// <summary>
+        /// Bodypart가 요구되는지
+        /// </summary>
         public List<string> requireBodyParts;
 
+        /// <summary>
+        /// 소집시 항상 비행을 시도하는지
+        /// </summary>
         public bool alwaysFlyIfDrafted;
 
         public override void ResolveReferences(Def parentDef)

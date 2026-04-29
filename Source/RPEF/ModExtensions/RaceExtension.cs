@@ -59,6 +59,9 @@ namespace RPEF
         private Dictionary<ThoughtDef, ThoughtDef> _thoughtReplacerInvDict;
         public List<ThoughtReplacer> thoughtReplacerInv;
 
+        public static bool HideGenes(Pawn pawn) => pawn?.def.GetModExtension<RaceExtension>()?.hideGenes == true;
+        public bool hideGenes = false;
+
         /// <summary>
         /// 불임 여부
         /// </summary>

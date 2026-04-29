@@ -10,10 +10,13 @@ namespace RPEF
         private static Dictionary<int, List<Constraint>> _pawnConstraintCache = new Dictionary<int, List<Constraint>>();
         private static int _lastPawnCacheRefreshTicks;
 
+        private static Dictionary<(Def, Def), Constraint> _defPairFailConstraintCache = new Dictionary<(Def, Def), Constraint>();
+
         public static void ClearCache()
         {
             _defConstraintCache.Clear();
             _pawnConstraintCache.Clear();
+            _defPairFailConstraintCache.Clear();
             _lastPawnCacheRefreshTicks = 0;
         }
 
@@ -192,6 +195,11 @@ namespace RPEF
         private static List<Constraint> _tmpConstraints = new List<Constraint>();
         public static bool CheckAllConstraints(this Def def, Pawn pawn, out Constraint failedConstraint)
         {
+            if (!def.CheckAllConstraints(pawn.def, out failedConstraint))
+            {
+                return false;
+            }
+
             _tmpConstraints.Clear();
             def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnApplyPawn, _tmpConstraints);
             for (int i = 0; i < _tmpConstraints.Count; ++i)
@@ -232,6 +240,13 @@ namespace RPEF
 
         public static bool CheckAllConstraints(this Def def, ThingDef pawnDef, out Constraint failedConstraint)
         {
+            var cacheKey = (def, (Def)pawnDef);
+            if (_defPairFailConstraintCache.ContainsKey(cacheKey))
+            {
+                failedConstraint = _defPairFailConstraintCache[cacheKey];
+                return failedConstraint == null;
+            }
+
             _tmpConstraints.Clear();
             def.GetAllConstraintsOfDef(ConstraintRuleFlag.OnApplyPawn, _tmpConstraints);
             for (int i = 0; i < _tmpConstraints.Count; ++i)
@@ -245,6 +260,7 @@ namespace RPEF
                         JobFailReason.Is(failedConstraint.failReason);
                     }
 
+                    _defPairFailConstraintCache[cacheKey] = failedConstraint;
                     return false;
                 }
             }
@@ -255,7 +271,7 @@ namespace RPEF
             for (int i = 0; i < _tmpConstraints.Count; ++i)
             {
                 var constraint = _tmpConstraints[i];
-                if (!constraint.Check(def)) 
+                if (!constraint.Check(def))
                 {
                     failedConstraint = constraint;
                     if (failedConstraint.failReason != null)
@@ -263,11 +279,13 @@ namespace RPEF
                         JobFailReason.Is(failedConstraint.failReason);
                     }
 
+                    _defPairFailConstraintCache[cacheKey] = failedConstraint;
                     return false;
                 }
             }
 
             failedConstraint = null;
+            _defPairFailConstraintCache[cacheKey] = null;
             return true;
         }
     }

@@ -286,13 +286,14 @@ namespace RPEF
                     if (_comps.Count == 1 && verbModeIndex == i) { continue; }
 
                     var mode = PrimaryComp.Props.modes[i];
+                    var modeIndex = i;
 
                     options.Add(new FloatMenuOption(
                         label: mode.changeGizmoLabel ?? mode.label,
                         action: () => {
                             for (int j = 0; j < _comps.Count; ++j)
                             {
-                                _comps[j].ChangeMode(i);
+                                _comps[j].ChangeMode(modeIndex);
                             }
                         },
                         mouseoverGuiAction: mode.changeGizmoDescription != null ? (rect) => TooltipHandler.TipRegion(rect, mode.changeGizmoDescription) : null));

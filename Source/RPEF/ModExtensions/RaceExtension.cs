@@ -14,7 +14,10 @@ namespace RPEF
         public void LoadDataFromXmlCustom(XmlNode xmlRoot)
         {
             DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "thoughtDef", xmlRoot.Name);
-            DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "replacedThoughtDef", xmlRoot.FirstChild.Value);
+            if (xmlRoot.FirstChild?.Value != null && xmlRoot.FirstChild.Value.Length > 0)
+            {
+                DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "replacedThoughtDef", xmlRoot.FirstChild.Value);
+            }
         }
     }
 

@@ -59,6 +59,7 @@ namespace RPEF
         {
             try
             {
+                LazyPatchRace(harmony);
                 LazyPatchRestrictions(harmony);
 
                 harmony.PatchAll();

@@ -45,6 +45,7 @@ namespace RPEF
                 PatchXML(harmony);
                 PatchHumanlikeFlyExtension(harmony);
                 PatchRestrictions(harmony);
+                PatchSkillAptitude(harmony);
             }
             catch (Exception e)
             {

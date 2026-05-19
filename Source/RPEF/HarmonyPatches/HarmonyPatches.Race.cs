@@ -58,6 +58,14 @@ namespace RPEF
                 original: AccessTools.Method(typeof(InteractionWorker_RomanceAttempt), nameof(InteractionWorker_RomanceAttempt.SuccessChance)),
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(InteractionWorker_RomanceAttempt_SuccessChance_Postfix)));
 
+            harmony.Patch(
+                original: AccessTools.Method(typeof(StunHandler), "CanBeStunnedByDamage"),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(StunHandler_CanBeStunnedByDamage_Postfix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(StunHandler), "CanAdaptToDamage"),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(StunHandler_CanAdaptToDamage_Postfix)));
+
             #region 조각상 관련
             harmony.Patch(
                 original: AccessTools.Method(typeof(CompStatue), "CreateSnapshotOfPawn_HookForMods"),
@@ -392,6 +400,34 @@ namespace RPEF
                 if (recipientExt != null)
                 {
                     __result *= recipientExt.romanceSuccessChanceMultiplierAsRecipient;
+                }
+            }
+        }
+
+        public static void StunHandler_CanBeStunnedByDamage_Postfix(StunHandler __instance, DamageDef def, ref bool __result)
+        {
+            if (__result) { return; }
+
+            if (__instance.parent is Pawn pawn && def == DamageDefOf.EMP)
+            {
+                var extension = pawn.def.GetModExtension<RaceExtension>();
+                if (extension != null && extension.canBeStunnedByEMP && !pawn.Downed && !pawn.Dead)
+                {
+                    __result = true;
+                }
+            }
+        }
+
+        public static void StunHandler_CanAdaptToDamage_Postfix(StunHandler __instance, DamageDef def, ref bool __result)
+        {
+            if (__result) { return; }
+
+            if (__instance.parent is Pawn pawn && def == DamageDefOf.EMP)
+            {
+                var extension = pawn.def.GetModExtension<RaceExtension>();
+                if (extension != null && extension.canBeStunnedByEMP)
+                {
+                    __result = true;
                 }
             }
         }

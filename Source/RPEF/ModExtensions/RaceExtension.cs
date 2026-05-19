@@ -62,6 +62,8 @@ namespace RPEF
         public static bool HideGenes(Pawn pawn) => pawn?.def.GetModExtension<RaceExtension>()?.hideGenes == true;
         public bool hideGenes = false;
 
+        public bool canBeStunnedByEMP = false;
+
         /// <summary>
         /// 불임 여부
         /// </summary>

@@ -54,6 +54,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HarmonyPatches\HarmonyPatches.SkillAptitude.cs" />
     <Compile Include="ShootExt\CompEquippableVerbMode.cs" />
     <Compile Include="Comps\CompTrailRenderer.cs" />
     <Compile Include="Comps\LineRendererManager.cs" />
@@ -70,7 +71,7 @@
     <Compile Include="Constraints\Implementations\TraitConstraint.cs" />
     <Compile Include="Constraints\Implementations\XenotypeConstraint.cs" />
     <Compile Include="Constraints\ConstraintExtension.cs" />
-    <Compile Include="CustomDefs\ScaleableHairDef.cs" />
+    <Compile Include="ScaleableHairDef.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.HumanlikeFlyExt.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.Race.cs" />

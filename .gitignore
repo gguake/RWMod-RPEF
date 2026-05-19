@@ -25,3 +25,11 @@ Source/RPEF/.vs
 Mod/rwconfigrc.json
 
 Works
+# Added by code-review-graph
+.code-review-graph/
+.claude
+.codex
+.gemini
+.github
+.vscode
+.mcp.json

@@ -5,6 +5,39 @@ using Verse;
 
 namespace RPEF
 {
+    public class HediffWithSkillAptitude : HediffWithComps
+    {
+        public override void PostAdd(DamageInfo? dinfo)
+        {
+            base.PostAdd(dinfo);
+
+            if (CurStage is HediffStageWithSkillAptitude)
+            {
+                pawn.skills.DirtyAptitudes();
+            }
+        }
+
+        public override void PostRemoved()
+        {
+            base.PostRemoved();
+
+            if (CurStage is HediffStageWithSkillAptitude)
+            {
+                pawn.skills.DirtyAptitudes();
+            }
+        }
+
+        protected override void OnStageIndexChanged(int stageIndex)
+        {
+            base.OnStageIndexChanged(stageIndex);
+
+            if (CurStage is HediffStageWithSkillAptitude)
+            {
+                pawn.skills.DirtyAptitudes();
+            }
+        }
+    }
+
     public class HediffStageWithSkillAptitude : HediffStage
     {
         public List<Aptitude> skillAptitudes;

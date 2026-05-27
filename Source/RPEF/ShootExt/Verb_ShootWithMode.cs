@@ -23,6 +23,8 @@ namespace RPEF
             EquipmentCompVerbModeSource?.CurrentVerbMode.shotsPerBurstOverride ??
             base.ShotsPerBurst;
 
+        public virtual int ProjectileCount => EquipmentCompVerbModeSource?.CurrentVerbMode.projectilesPerShot ?? 1;
+
         public override float EffectiveRange
         {
             get
@@ -118,7 +120,7 @@ namespace RPEF
             {
                 projectile.Launch(launcher, origin, usedTarget, intendedTarget, hitFlags, preventFriendlyFire, equipment, targetCoverDef);
 
-                var projectileCount = verbShootExt.EquipmentCompVerbModeSource?.CurrentVerbMode.projectilesPerShot;
+                var projectileCount = verbShootExt.ProjectileCount;
                 for (int i = 1; i < projectileCount; ++i)
                 {
                     var subProjectile = (Projectile)GenSpawn.Spawn(projectile.def, projectile.Position, projectile.Map);

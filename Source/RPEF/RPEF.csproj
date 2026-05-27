@@ -76,6 +76,7 @@
     <Compile Include="HarmonyPatches\HarmonyPatches.HumanlikeFlyExt.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.Race.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.Restriction.cs" />
+    <Compile Include="HarmonyPatches\HarmonyPatches.SkillAptitude.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.XML.cs" />
     <Compile Include="ModExtensions\Hook\ApparelGraphicHook.cs" />
     <Compile Include="ModExtensions\Hook\FactionContinuePawnKindHook.cs" />

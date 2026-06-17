@@ -136,5 +136,21 @@ namespace RPEF
             }
             lineRenderer.BakeMesh(mesh, Find.Camera);
         }
+
+        public void ResetTrail()
+        {
+            if (mesh != null)
+            {
+                mesh.Clear();
+            }
+
+            var lastPoint = points[0];
+            for (int i = 1; i < points.Length; ++i)
+            {
+                points[i] = lastPoint;
+            }
+
+            trailStart = false;
+        }
     }
 }

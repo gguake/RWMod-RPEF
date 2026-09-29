@@ -3,7 +3,6 @@ using RimWorld;
 using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Verse;
 
 namespace RPEF
@@ -145,7 +144,6 @@ namespace RPEF
             }
         }
 
-        private static FieldInfo _field_PawnRenderTree_nodesByTag = AccessTools.Field(typeof(PawnRenderTree), "nodesByTag");
         private static void DynamicPawnRenderNodeSetup_Apparel_ProcessApparel_Postfix(
             ref IEnumerable<(PawnRenderNode node, PawnRenderNode parent)> __result, 
             Pawn pawn, 
@@ -156,7 +154,6 @@ namespace RPEF
             {
                 if (tuple.node is PawnRenderNode_ApparelBase)
                 {
-                    var nodesByTag = _field_PawnRenderTree_nodesByTag.GetValue(tree) as Dictionary<PawnRenderNodeTagDef, PawnRenderNode>;
                     var apparelWornIndex = pawn.apparel.WornApparel.IndexOf(tuple.node.apparel);
 
                     var abstractParentApparelTagDef = tuple.node.Props.parentTagDef;
@@ -168,12 +165,9 @@ namespace RPEF
                     }
 
                     PawnRenderNode parentNode = null;
-                    if (abstractParentApparelTagDef != null)
+                    if (abstractParentApparelTagDef == null || !tree.TryGetNodeByTag(abstractParentApparelTagDef, out parentNode) || parentNode == null)
                     {
-                        if (!tree.TryGetNodeByTag(abstractParentApparelTagDef, out parentNode))
-                        {
-                            parentNode = nodesByTag[abstractParentApparelTagDef];
-                        }
+                        continue;
                     }
 
                     int layerOffset = 0;

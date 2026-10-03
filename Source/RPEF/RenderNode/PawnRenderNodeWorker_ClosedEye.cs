@@ -15,10 +15,5 @@ namespace RPEF
 
             return false;
         }
-
-        protected override Graphic GetGraphic(PawnRenderNode node, PawnDrawParms parms)
-        {
-            return base.GetGraphic(node, parms);
-        }
     }
 }

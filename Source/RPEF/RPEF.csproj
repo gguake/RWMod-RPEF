@@ -54,7 +54,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HarmonyPatches\HarmonyPatches.SkillAptitude.cs" />
+    <Compile Include="RenderNode\PawnRenderNodeWorker_SleepFace.cs" />
     <Compile Include="ShootExt\CompEquippableVerbMode.cs" />
     <Compile Include="Comps\CompTrailRenderer.cs" />
     <Compile Include="Comps\LineRendererManager.cs" />

@@ -60,12 +60,18 @@ namespace RPEF
             {
                 yield return $"{parentDef.defName} with CompProperties_LineTrail must have tickerType as Normal.";
             }
+
+            if (maxTrailPoint < 2)
+            {
+                yield return $"{parentDef.defName} with CompProperties_TrailRenderer must have maxTrailPoint of at least 2.";
+            }
         }
     }
 
     public class CompTrailRenderer : ThingComp
     {
         private Vector3[] points;
+        private RibbonMeshGenerator ribbon;
         private Mesh mesh;
         private bool trailStart;
 
@@ -75,7 +81,23 @@ namespace RPEF
         {
             base.PostSpawnSetup(respawningAfterLoad);
 
-            points = new Vector3[Props.maxTrailPoint];
+            ReleaseMesh();
+            points = new Vector3[System.Math.Max(2, Props.maxTrailPoint)];
+            ribbon = new RibbonMeshGenerator(points.Length);
+            trailStart = false;
+        }
+
+        public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
+        {
+            ReleaseMesh();
+            trailStart = false;
+            base.PostDeSpawn(map, mode);
+        }
+
+        public override void PostDestroy(DestroyMode mode, Map previousMap)
+        {
+            ReleaseMesh();
+            base.PostDestroy(mode, previousMap);
         }
 
         public override void CompTick()
@@ -95,7 +117,7 @@ namespace RPEF
 
         public override void PostDraw()
         {
-            if (mesh != null)
+            if (mesh != null && mesh.vertexCount > 0 && Props.material != null)
             {
                 Graphics.DrawMesh(mesh, new Vector3(), Quaternion.identity, Props.material, 0);
             }
@@ -103,6 +125,11 @@ namespace RPEF
 
         public void RegisterNewTrail(Vector3 position)
         {
+            if (points == null)
+            {
+                return;
+            }
+
             if (!trailStart)
             {
                 for (int i = 0; i < points.Length; ++i)
@@ -119,22 +146,19 @@ namespace RPEF
             }
             points[0] = position;
 
-            var lineRenderer = LineRendererManager.LineRenderer;
-            lineRenderer.positionCount = points.Length;
-            lineRenderer.material = Props.material;
-            lineRenderer.textureMode = Props.lineTextureMode;
-            lineRenderer.widthCurve = Props.aniCurve;
-
-            for (int i = 0; i < points.Length; ++i)
+            Vector3 viewDirection = Find.Camera != null ? Find.Camera.transform.forward : Vector3.down;
+            if (!ribbon.Update(points, Props.aniCurve, Props.lineTextureMode, viewDirection))
             {
-                lineRenderer.SetPosition(i, points[points.Length - 1 - i]);
+                mesh?.Clear();
+                return;
             }
 
             if (mesh == null)
             {
                 mesh = new Mesh();
+                mesh.MarkDynamic();
             }
-            lineRenderer.BakeMesh(mesh, Find.Camera);
+            ribbon.Upload(mesh);
         }
 
         public void ResetTrail()
@@ -144,13 +168,16 @@ namespace RPEF
                 mesh.Clear();
             }
 
-            var lastPoint = points[0];
-            for (int i = 1; i < points.Length; ++i)
-            {
-                points[i] = lastPoint;
-            }
-
             trailStart = false;
+        }
+
+        private void ReleaseMesh()
+        {
+            if (mesh != null)
+            {
+                Object.Destroy(mesh);
+                mesh = null;
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using RimWorld;
+using RimWorld;
 using System.Collections.Generic;
 using System.Xml;
 using Verse;
@@ -36,7 +36,7 @@ namespace RPEF
         }
 
         [Unsaved]
-        private Dictionary<LifeStageDef, HumanlikeFlyAnimationData> _dictLifestageAnimationData = new System.Collections.Generic.Dictionary<LifeStageDef, HumanlikeFlyAnimationData>();
+        private Dictionary<LifeStageDef, HumanlikeFlyAnimationData> _dictLifestageAnimationData = new Dictionary<LifeStageDef, HumanlikeFlyAnimationData>();
 
         /// <summary>
         /// 비행시 재생할 애니메이션

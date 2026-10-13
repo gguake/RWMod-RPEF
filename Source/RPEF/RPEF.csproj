@@ -48,6 +48,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RenderNode\PawnRenderNodeWorker_SleepFace.cs" />
     <Compile Include="ShootExt\CompEquippableVerbMode.cs" />
     <Compile Include="Comps\CompTrailRenderer.cs" />
     <Compile Include="Comps\RibbonMeshGenerator.cs" />

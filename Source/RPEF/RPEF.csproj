@@ -51,6 +51,7 @@
     <Compile Include="RenderNode\PawnRenderNodeWorker_SleepFace.cs" />
     <Compile Include="ShootExt\CompEquippableVerbMode.cs" />
     <Compile Include="Comps\CompTrailRenderer.cs" />
+    <Compile Include="Comps\MapComponent_Trails.cs" />
     <Compile Include="Comps\RibbonMeshGenerator.cs" />
     <Compile Include="Constraints\Constraint.cs" />
     <Compile Include="Constraints\ConstraintDef.cs" />

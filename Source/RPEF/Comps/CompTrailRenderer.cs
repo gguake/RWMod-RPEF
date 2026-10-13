@@ -19,6 +19,7 @@ namespace RPEF
 
         public int maxTrailPoint = 10;
         public int refreshIntervalTicks = 30;
+        public int fadeOutTicks;
 
         [Unsaved]
         public Material material;
@@ -65,15 +66,17 @@ namespace RPEF
             {
                 yield return $"{parentDef.defName} with CompProperties_TrailRenderer must have maxTrailPoint of at least 2.";
             }
+
+            if (fadeOutTicks < 0)
+            {
+                yield return $"{parentDef.defName} with CompProperties_TrailRenderer must have nonnegative fadeOutTicks.";
+            }
         }
     }
 
     public class CompTrailRenderer : ThingComp
     {
-        private Vector3[] points;
-        private RibbonMeshGenerator ribbon;
-        private Mesh mesh;
-        private bool trailStart;
+        private MapComponent_Trails trailManager;
 
         public CompProperties_TrailRenderer Props => (CompProperties_TrailRenderer)props;
 
@@ -81,22 +84,19 @@ namespace RPEF
         {
             base.PostSpawnSetup(respawningAfterLoad);
 
-            ReleaseMesh();
-            points = new Vector3[System.Math.Max(2, Props.maxTrailPoint)];
-            ribbon = new RibbonMeshGenerator(points.Length);
-            trailStart = false;
+            ResetTrail();
+            trailManager = parent.Map.GetComponent<MapComponent_Trails>();
         }
 
         public override void PostDeSpawn(Map map, DestroyMode mode = DestroyMode.Vanish)
         {
-            ReleaseMesh();
-            trailStart = false;
+            FinishTrail();
             base.PostDeSpawn(map, mode);
         }
 
         public override void PostDestroy(DestroyMode mode, Map previousMap)
         {
-            ReleaseMesh();
+            FinishTrail();
             base.PostDestroy(mode, previousMap);
         }
 
@@ -104,7 +104,7 @@ namespace RPEF
         {
             if (!parent.Spawned)
             {
-                trailStart = false;
+                FinishTrail();
                 return;
             }
 
@@ -115,69 +115,31 @@ namespace RPEF
             }
         }
 
-        public override void PostDraw()
-        {
-            if (mesh != null && mesh.vertexCount > 0 && Props.material != null)
-            {
-                Graphics.DrawMesh(mesh, new Vector3(), Quaternion.identity, Props.material, 0);
-            }
-        }
-
         public void RegisterNewTrail(Vector3 position)
         {
-            if (points == null)
+            if (!parent.Spawned)
             {
                 return;
             }
 
-            if (!trailStart)
+            if (trailManager == null || trailManager.map != parent.Map)
             {
-                for (int i = 0; i < points.Length; ++i)
-                {
-                    points[i] = position;
-                }
-
-                trailStart = true;
+                FinishTrail();
+                trailManager = parent.Map.GetComponent<MapComponent_Trails>();
             }
 
-            for (int i = points.Length - 1; i >= 1; i--)
-            {
-                points[i] = points[i - 1];
-            }
-            points[0] = position;
+            trailManager.RegisterPoint(this, position);
+        }
 
-            Vector3 viewDirection = Find.Camera != null ? Find.Camera.transform.forward : Vector3.down;
-            if (!ribbon.Update(points, Props.aniCurve, Props.lineTextureMode, viewDirection))
-            {
-                mesh?.Clear();
-                return;
-            }
-
-            if (mesh == null)
-            {
-                mesh = new Mesh();
-                mesh.MarkDynamic();
-            }
-            ribbon.Upload(mesh);
+        public void FinishTrail()
+        {
+            trailManager?.FinishTrail(this);
+            trailManager = null;
         }
 
         public void ResetTrail()
         {
-            if (mesh != null)
-            {
-                mesh.Clear();
-            }
-
-            trailStart = false;
-        }
-
-        private void ReleaseMesh()
-        {
-            if (mesh != null)
-            {
-                Object.Destroy(mesh);
-                mesh = null;
-            }
+            trailManager?.ResetTrail(this);
         }
     }
 }

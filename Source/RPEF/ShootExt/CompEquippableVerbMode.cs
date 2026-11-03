@@ -41,8 +41,6 @@ namespace RPEF
         public float? warmupTimeOverride;
         public ThingDef projectileDefOverride;
 
-        public int projectilesPerShot = 1;
-
         public List<StatModifier> statOffsets;
         public List<StatModifier> statFactors;
 

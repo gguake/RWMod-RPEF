@@ -82,6 +82,7 @@
     <Compile Include="ModExtensions\Hook\SleepFaceHeadHook.cs" />
     <Compile Include="ModExtensions\HumanlikeFlyExtension.cs" />
     <Compile Include="ModExtensions\RaceExtension.cs" />
+    <Compile Include="ModExtensions\SplitProjectileExtension.cs" />
     <Compile Include="PawnRenderSubWorkers\PawnRenderSubWorker_DrawByDevelopmentStage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RenderNode\Apparel\PawnRenderNode_ApparelBase.cs" />
@@ -94,6 +95,7 @@
     <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />
     <Compile Include="RPEFMod.cs" />
     <Compile Include="ThinkNode\ThinkNode_ConditionalRace.cs" />
+    <Compile Include="ShootExt\Bullet_Split.cs" />
     <Compile Include="ShootExt\Verb_ShootWithMode.cs" />
   </ItemGroup>
 </Project>

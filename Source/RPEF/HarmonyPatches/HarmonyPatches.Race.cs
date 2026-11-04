@@ -438,97 +438,80 @@ namespace RPEF
         }
 
         private const string CompStatueDictKey = "_RPEF_StatueInfo";
+
+        private static readonly AccessTools.FieldRef<CompStatue, Dictionary<string, object>> CompStatue_additionalSavedPawnDataForMods =
+            AccessTools.FieldRefAccess<CompStatue, Dictionary<string, object>>("additionalSavedPawnDataForMods");
+
         private static void CompStatue_CreateSnapshotOfPawn_HookForMods_Postfix(Pawn p, Dictionary<string, object> dictToStoreDataIn)
         {
-            dictToStoreDataIn.Add(CompStatueDictKey, new CompStatueRPEFInfo()
+            if (p.def == ThingDefOf.Human) { return; }
+
+            dictToStoreDataIn[CompStatueDictKey] = new CompStatueRPEFInfo()
             {
                 thingDef = p.def,
                 pawnKindDef = p.kindDef,
-            });
+            };
         }
 
-        private static IEnumerable<CodeInstruction> CompStatue_InitFakePawn_Transpiler(IEnumerable<CodeInstruction> codeInstructions, ILGenerator ilGenerator)
+        private static CompStatueRPEFInfo GetCompStatueRPEFInfo(CompStatue statue)
+        {
+            var data = CompStatue_additionalSavedPawnDataForMods(statue);
+            if (data != null && data.TryGetValue(CompStatueDictKey, out var value))
+            {
+                return value as CompStatueRPEFInfo;
+            }
+
+            return null;
+        }
+
+        private static ThingDef CompStatue_InitFakePawn_ThingDef_Injection(ThingDef thingDef, CompStatue statue)
+        {
+            return GetCompStatueRPEFInfo(statue)?.thingDef ?? thingDef;
+        }
+
+        private static PawnKindDef CompStatue_InitFakePawn_PawnKindDef_Injection(PawnKindDef pawnKindDef, CompStatue statue)
+        {
+            return GetCompStatueRPEFInfo(statue)?.pawnKindDef ?? pawnKindDef;
+        }
+
+        private static IEnumerable<CodeInstruction> CompStatue_InitFakePawn_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
         {
             var instructions = codeInstructions.ToList();
 
-            var thingDefInjectionIndex = instructions.FindIndex(
+            var thingDefIndex = instructions.FindIndex(
                 v =>
                 v.opcode == OpCodes.Ldsfld &&
                 v.OperandIs(AccessTools.Field(typeof(ThingDefOf), nameof(ThingDefOf.Human))));
 
-            if (thingDefInjectionIndex >= 0)
+            if (thingDefIndex >= 0)
             {
-                var injectionIndex = thingDefInjectionIndex + 1;
-
-                var localObject = ilGenerator.DeclareLocal(typeof(object));
-                var labelNullCheckJump = ilGenerator.DefineLabel();
-
-                instructions[injectionIndex] = instructions[injectionIndex].WithLabels(labelNullCheckJump);
-                instructions.InsertRange(injectionIndex, new CodeInstruction[]
+                instructions.InsertRange(thingDefIndex + 1, new CodeInstruction[]
                 {
                     new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
-                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
-                    new CodeInstruction(OpCodes.Ldstr, CompStatueDictKey),
-                    new CodeInstruction(OpCodes.Ldloca_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<string, object>), "TryGetValue")),
-                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.thingDef))),
-                    new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(ThingDefOf), nameof(ThingDefOf.Human))),
-                    new CodeInstruction(OpCodes.Beq_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Pop),
-                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.thingDef))),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(CompStatue_InitFakePawn_ThingDef_Injection))),
                 });
             }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find ThingDef injection point for CompStatue_InitFakePawn_Transpiler");
+            }
 
-            var pawnKindDefInjectionIndex = instructions.FindIndex(
+            var pawnKindDefIndex = instructions.FindIndex(
                 v =>
                 v.opcode == OpCodes.Ldsfld &&
                 v.OperandIs(AccessTools.Field(typeof(PawnKindDefOf), nameof(PawnKindDefOf.Colonist))));
 
-            if (pawnKindDefInjectionIndex >= 0)
+            if (pawnKindDefIndex >= 0)
             {
-                var injectionIndex = pawnKindDefInjectionIndex + 1;
-
-                var localObject = ilGenerator.DeclareLocal(typeof(object));
-                var labelNullCheckJump = ilGenerator.DefineLabel();
-
-                instructions[injectionIndex] = instructions[injectionIndex].WithLabels(labelNullCheckJump);
-                instructions.InsertRange(injectionIndex, new CodeInstruction[]
+                instructions.InsertRange(pawnKindDefIndex + 1, new CodeInstruction[]
                 {
                     new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
-                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Ldarg_0),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatue), "additionalSavedPawnDataForMods")),
-                    new CodeInstruction(OpCodes.Ldstr, CompStatueDictKey),
-                    new CodeInstruction(OpCodes.Ldloca_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(Dictionary<string, object>), "TryGetValue")),
-                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Brfalse_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.pawnKindDef))),
-                    new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(PawnKindDefOf), nameof(PawnKindDefOf.Colonist))),
-                    new CodeInstruction(OpCodes.Beq_S, labelNullCheckJump),
-
-                    new CodeInstruction(OpCodes.Pop),
-                    new CodeInstruction(OpCodes.Ldloc_S, localObject.LocalIndex),
-                    new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(CompStatueRPEFInfo), nameof(CompStatueRPEFInfo.pawnKindDef))),
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(HarmonyPatches), nameof(CompStatue_InitFakePawn_PawnKindDef_Injection))),
                 });
+            }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find PawnKindDef injection point for CompStatue_InitFakePawn_Transpiler");
             }
 
             return instructions;

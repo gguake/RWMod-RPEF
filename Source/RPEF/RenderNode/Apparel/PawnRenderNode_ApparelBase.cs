@@ -1,4 +1,6 @@
-﻿using RimWorld;
+﻿using HarmonyLib;
+using RimWorld;
+using System;
 using Verse;
 
 namespace RPEF
@@ -9,18 +11,27 @@ namespace RPEF
         public float? baseLayerOverride = 0f;
         public DrawData drawDataOverride;
 
+        private static readonly Func<object, object> _memberwiseClone =
+            AccessTools.MethodDelegate<Func<object, object>>(AccessTools.Method(typeof(object), "MemberwiseClone"));
+
+        /// <summary>
+        /// ApparelDef의 renderNodeProperties는 모든 폰이 공유하므로, 폰마다 다른 baseLayer를 쓸 수 있도록 노드별 사본을 만든다.
+        /// </summary>
+        private static PawnRenderNodeProperties CloneProps(PawnRenderNodeProperties props)
+            => props == null ? null : (PawnRenderNodeProperties)_memberwiseClone(props);
+
         public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree)
-            : base(pawn, props, tree)
+            : base(pawn, CloneProps(props), tree)
         {
         }
 
         public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel) :
-            base(pawn, props, tree, apparel)
+            base(pawn, CloneProps(props), tree, apparel)
         {
         }
 
         public PawnRenderNode_ApparelBase(Pawn pawn, PawnRenderNodeProperties props, PawnRenderTree tree, Apparel apparel, bool useHeadMesh) :
-            base(pawn, props, tree, apparel, useHeadMesh)
+            base(pawn, CloneProps(props), tree, apparel, useHeadMesh)
         {
         }
 

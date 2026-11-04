@@ -61,6 +61,7 @@ namespace RPEF
             {
                 LazyPatchRace(harmony);
                 LazyPatchRestrictions(harmony);
+                ValidateSkillAptitudeHediffs();
 
                 harmony.PatchAll();
                 Log.Message($"[RPEF] Patch Completed");

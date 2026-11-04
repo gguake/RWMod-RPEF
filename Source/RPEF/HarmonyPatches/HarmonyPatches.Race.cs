@@ -29,13 +29,6 @@ namespace RPEF
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_TryGiveSolidBioTo_Transpiler)));
 
             harmony.Patch(
-                original: AccessTools.Method(typeof(PawnBioAndNameGenerator), "GiveShuffledBioTo"),
-                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_GiveShuffledBioTo_Transpiler)));
-            harmony.Patch(
-                original: AccessTools.Method(typeof(PawnBioAndNameGenerator), "TryGiveSolidBioTo"),
-                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnBioAndNameGenerator_TryGiveSolidBioTo_Transpiler)));
-
-            harmony.Patch(
                 original: AccessTools.Method(typeof(Gizmo_GrowthTier), "GrowthTierTooltip"),
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Gizmo_GrowthTier_GrowthTierTooltip_Transpiler)));
             harmony.Patch(

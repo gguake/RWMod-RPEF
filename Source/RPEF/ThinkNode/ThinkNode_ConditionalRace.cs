@@ -11,6 +11,14 @@ namespace RPEF
     {
         public List<ThingDef> races;
 
+        public override ThinkNode DeepCopy(bool resolve = true)
+        {
+            // ThinkNode_Subtree가 트리를 복사할때 races가 빠지면 모든 종족을 통과시키게 된다.
+            var obj = (ThinkNode_ConditionalRace)base.DeepCopy(resolve);
+            obj.races = races;
+            return obj;
+        }
+
         public override float GetPriority(Pawn pawn)
         {
             if (races != null && !races.Contains(pawn.def))

@@ -1,5 +1,9 @@
 using HarmonyLib;
 using RimWorld;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using Verse;
 using Verse.AI;
 
@@ -9,26 +13,44 @@ namespace RPEF
     {
         public static void PatchVanillaBugFix(Harmony harmony)
         {
+            var goToChairInitAction = typeof(JobDriver_FeedBaby).GetNestedTypes(BindingFlags.NonPublic)
+                .SelectMany(v => v.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                .FirstOrDefault(v => v.Name.Contains("<GoToChair>"));
+            if (goToChairInitAction == null)
+            {
+                Log.Error($"[RPEF] Failed to find JobDriver_FeedBaby.GoToChair init action");
+                return;
+            }
+
             harmony.Patch(
-                original: AccessTools.Method(typeof(JobDriver_LayDown), nameof(JobDriver_LayDown.TryMakePreToilReservations)),
-                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(JobDriver_LayDown_TryMakePreToilReservations_Postfix)));
+                original: goToChairInitAction,
+                transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(JobDriver_FeedBaby_GoToChair_Transpiler)));
         }
 
-        // 바닐라 눕기 잡은 침대가 아닌 바닥 칸을 물리 예약만 하고 목적지 예약은 하지 않는다.
-        // 아기 먹이기(JobDriver_FeedBaby.GoToChair)는 의자가 없으면 RCellFinder.SpotToStandDuringJob으로 설 자리를 고르는데,
-        // 이 탐색은 목적지 예약만 보고 물리 예약은 보지 않아 바닥에 누운 폰의 칸을 골라 ReserveSittableOrSpot에서 예약 오류를 낸다.
-        // 시작된 잡에 묶이도록 여기서 건다(잡 정리 때 바닐라가 잡 연결을 풀고, 다음 길 찾기 때 지운다).
-        private static void JobDriver_LayDown_TryMakePreToilReservations_Postfix(JobDriver_LayDown __instance, bool __result)
+        // 바닐라 아기 먹이기는 의자가 없으면 RCellFinder.SpotToStandDuringJob으로 설 자리를 고르고 바로 ReserveSittableOrSpot으로 예약한다.
+        // 이 탐색은 목적지 예약만 보고 물리 예약은 보지 않아서, 다른 폰이 물리 예약만 한 칸(바닥에 누운 칸, 작업대 상호작용 칸 등)을 골라 예약 오류를 낸다.
+        // 먹기(Toils_Ingest.TryFindChairOrSpot)처럼 그 자리를 예약할 수 있는 칸만 고르게 한다.
+        private static IEnumerable<CodeInstruction> JobDriver_FeedBaby_GoToChair_Transpiler(IEnumerable<CodeInstruction> codeInstructions)
         {
-            if (!__result || __instance.Bed != null) { return; }
+            var instructions = codeInstructions.ToList();
 
-            var pawn = __instance.pawn;
-            var job = __instance.job;
-            // 바닐라가 바닥 칸을 물리 예약하는 경우와 같은 조건
-            if (!job.targetA.Cell.IsValid || pawn.ageTracker.CurLifeStage.alwaysDowned || job.forceSleep) { return; }
-            if (!pawn.Spawned) { return; }
+            var original = AccessTools.Method(typeof(RCellFinder), nameof(RCellFinder.SpotToStandDuringJob));
+            var index = instructions.FindIndex(v => v.Calls(original));
+            if (index >= 0)
+            {
+                instructions[index].operand = AccessTools.Method(typeof(HarmonyPatches), nameof(JobDriver_FeedBaby_SpotToStandDuringJob_Injection));
+            }
+            else
+            {
+                Log.Error($"[RPEF] Failed to find injection point for JobDriver_FeedBaby_GoToChair_Transpiler");
+            }
 
-            pawn.Map.pawnDestinationReservationManager.Reserve(pawn, job, job.targetA.Cell);
+            return instructions;
+        }
+
+        private static IntVec3 JobDriver_FeedBaby_SpotToStandDuringJob_Injection(Pawn pawn, Predicate<IntVec3> extraValidator, Region targetRegion)
+        {
+            return RCellFinder.SpotToStandDuringJob(pawn, c => pawn.CanReserveSittableOrSpot(c) && (extraValidator == null || extraValidator(c)), targetRegion);
         }
     }
 }

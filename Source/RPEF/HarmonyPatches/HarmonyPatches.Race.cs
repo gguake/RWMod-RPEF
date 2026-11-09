@@ -1,8 +1,10 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using Verse;
 
@@ -13,7 +15,10 @@ namespace RPEF
         private static void PatchRace(Harmony harmony)
         {
             harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GeneratePawn), new Type[] { typeof(PawnGenerationRequest) }),
-                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Prefix)));
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Prefix)),
+                finalizer: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Finalizer)));
+
+            PatchPawnKindReplaceScopes(harmony);
 
             harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateGenes"),
                 prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GenerateGenes_Prefix)));
@@ -84,40 +89,189 @@ namespace RPEF
             #endregion
         }
 
-        private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request)
+        #region 폰 종류 교체 허용 범위
+        // 종류 교체(PawnGeneratorKindHook)는 노예·난민을 새로 만드는 바닐라 경로 안에서만 일어나게 한다.
+        // 기존 폰의 kindDef로 다시 만드는 경로(복제, 출산, 친척 생성 등)에서는 교체하지 않는다.
+        [ThreadStatic]
+        private static int pawnKindReplaceAllowScope;
+
+        // GeneratePawn 중첩 깊이. 친척 생성처럼 GeneratePawn 안에서 다시 부르는 생성은 교체하지 않는다.
+        [ThreadStatic]
+        private static int generatePawnDepth;
+
+        private static void PatchPawnKindReplaceScopes(Harmony harmony)
         {
-            List<(PawnKindDef kindDef, int weight)> kindDefCandidates = null;
+            PatchPawnKindReplaceScope(harmony,
+                AccessTools.DeclaredMethod(typeof(PrisonerWillingToJoinQuestUtility), nameof(PrisonerWillingToJoinQuestUtility.GeneratePrisoner), new Type[] { typeof(PlanetTile), typeof(Faction) }),
+                "PrisonerWillingToJoinQuestUtility.GeneratePrisoner");
 
-            var originalKindDef = request.KindDef;
-            foreach (var kindDef in DefDatabase<PawnKindDef>.AllDefsListForReading)
-            {
-                if (kindDef.modExtensions != null)
+            PatchPawnKindReplaceScope(harmony,
+                AccessTools.DeclaredMethod(typeof(RimWorld.QuestGen.QuestNode_Root_Hospitality_Refugee), "RunInt"),
+                "QuestNode_Root_Hospitality_Refugee.RunInt");
+
+            PatchPawnKindReplaceScope(harmony,
+                AccessTools.DeclaredMethod(typeof(RimWorld.QuestGen.QuestNode_Root_WandererJoinAbasia), nameof(RimWorld.QuestGen.QuestNode_Root_WandererJoinAbasia.GeneratePawn_NewTemp), new Type[] { typeof(Map) }),
+                "QuestNode_Root_WandererJoinAbasia.GeneratePawn_NewTemp");
+
+            PatchPawnKindReplaceScope(harmony,
+                AccessTools.DeclaredMethod(typeof(ThingSetMaker_MapGen_AncientPodContents), "GenerateSlave_NewTemp", new Type[] { typeof(ThingSetMakerParams) }),
+                "ThingSetMaker_MapGen_AncientPodContents.GenerateSlave_NewTemp");
+
+            PatchPawnKindReplaceScope(harmony,
+                AccessTools.DeclaredMethod(typeof(RimWorld.BaseGen.SymbolResolver_TerrorBuildings), "SpawnBuildings", new Type[]
                 {
-                    foreach (var extension in kindDef.modExtensions)
-                    {
-                        if (extension is PawnGeneratorKindHook hook &&
-                            hook.ReplaceHookInfos != null &&
-                            hook.ReplaceHookInfos.TryGetValue(originalKindDef, out var weight) &&
-                            weight > 0f)
-                        {
-                            if (kindDefCandidates == null)
-                            {
-                                kindDefCandidates = new List<(PawnKindDef kindDef, int weight)>()
-                                {
-                                    (originalKindDef, 10000),
-                                };
-                            }
+                    typeof(List<IntVec3>), typeof(int), typeof(Map), typeof(RimWorld.BaseGen.ResolveParams), typeof(List<IntVec3>), typeof(List<ThingDef>),
+                }),
+                "SymbolResolver_TerrorBuildings.SpawnBuildings");
 
-                            kindDefCandidates.Add((kindDef, weight));
+            // 지연 열거자라 호출 시점이 아니라 MoveNext 안에서 폰이 만들어진다. 결과를 감싸 MoveNext 동안만 허용한다.
+            var slaveStockMethod = AccessTools.DeclaredMethod(typeof(StockGenerator_Slaves), nameof(StockGenerator_Slaves.GenerateThings), new Type[] { typeof(PlanetTile), typeof(Faction) });
+            if (slaveStockMethod != null)
+            {
+                harmony.Patch(slaveStockMethod,
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(StockGenerator_Slaves_GenerateThings_Postfix)));
+            }
+            else
+            {
+                Log.Warning("[RPEF] Failed to find StockGenerator_Slaves.GenerateThings for pawn kind replace scope");
+            }
+        }
+
+        private static void PatchPawnKindReplaceScope(Harmony harmony, MethodInfo method, string methodName)
+        {
+            if (method == null)
+            {
+                Log.Warning($"[RPEF] Failed to find {methodName} for pawn kind replace scope");
+                return;
+            }
+
+            harmony.Patch(method,
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnKindReplaceScope_Prefix)),
+                finalizer: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnKindReplaceScope_Finalizer)));
+        }
+
+        private static void PawnKindReplaceScope_Prefix(out int __state)
+        {
+            __state = pawnKindReplaceAllowScope;
+            pawnKindReplaceAllowScope = __state + 1;
+        }
+
+        private static void PawnKindReplaceScope_Finalizer(int __state)
+        {
+            pawnKindReplaceAllowScope = __state;
+        }
+
+        private static void StockGenerator_Slaves_GenerateThings_Postfix(ref IEnumerable<Thing> __result)
+        {
+            if (__result != null)
+            {
+                __result = new PawnKindReplaceScopedEnumerable<Thing>(__result);
+            }
+        }
+
+        /// <summary>
+        /// 원본 열거자의 MoveNext 동안만 종류 교체를 허용한다. 소비자가 항목 사이에 실행하는 코드는 범위 밖이다.
+        /// </summary>
+        private class PawnKindReplaceScopedEnumerable<T> : IEnumerable<T>
+        {
+            private readonly IEnumerable<T> source;
+
+            public PawnKindReplaceScopedEnumerable(IEnumerable<T> source)
+            {
+                this.source = source;
+            }
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                return new Enumerator(source.GetEnumerator());
+            }
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            private class Enumerator : IEnumerator<T>
+            {
+                private readonly IEnumerator<T> inner;
+
+                public Enumerator(IEnumerator<T> inner)
+                {
+                    this.inner = inner;
+                }
+
+                public T Current => inner.Current;
+
+                object System.Collections.IEnumerator.Current => inner.Current;
+
+                public bool MoveNext()
+                {
+                    var prevScope = pawnKindReplaceAllowScope;
+                    pawnKindReplaceAllowScope = prevScope + 1;
+                    try
+                    {
+                        return inner.MoveNext();
+                    }
+                    finally
+                    {
+                        pawnKindReplaceAllowScope = prevScope;
+                    }
+                }
+
+                public void Reset()
+                {
+                    inner.Reset();
+                }
+
+                public void Dispose()
+                {
+                    inner.Dispose();
+                }
+            }
+        }
+        #endregion
+
+        private static bool PawnGenerator_GeneratePawn_Prefix(ref PawnGenerationRequest request, out int __state)
+        {
+            __state = generatePawnDepth;
+            generatePawnDepth = __state + 1;
+
+            // 허용 범위 안의 가장 바깥 생성에서만, 신생아 전용 요청이 아닐 때만 종류를 교체한다.
+            if (pawnKindReplaceAllowScope > 0 && __state == 0 && request.AllowedDevelopmentalStages != DevelopmentalStage.Newborn)
+            {
+                List<(PawnKindDef kindDef, int weight)> kindDefCandidates = null;
+
+                var originalKindDef = request.KindDef;
+                foreach (var kindDef in DefDatabase<PawnKindDef>.AllDefsListForReading)
+                {
+                    if (kindDef.modExtensions != null)
+                    {
+                        foreach (var extension in kindDef.modExtensions)
+                        {
+                            if (extension is PawnGeneratorKindHook hook &&
+                                hook.ReplaceHookInfos != null &&
+                                hook.ReplaceHookInfos.TryGetValue(originalKindDef, out var weight) &&
+                                weight > 0f)
+                            {
+                                if (kindDefCandidates == null)
+                                {
+                                    kindDefCandidates = new List<(PawnKindDef kindDef, int weight)>()
+                                    {
+                                        (originalKindDef, 10000),
+                                    };
+                                }
+
+                                kindDefCandidates.Add((kindDef, weight));
+                            }
                         }
                     }
                 }
-            }
 
-            if (kindDefCandidates != null && kindDefCandidates.Count > 1)
-            {
-                var result = kindDefCandidates.RandomElementByWeight(v => v.weight).kindDef;
-                request.KindDef = result;
+                if (kindDefCandidates != null && kindDefCandidates.Count > 1)
+                {
+                    var result = kindDefCandidates.RandomElementByWeight(v => v.weight).kindDef;
+                    request.KindDef = result;
+                }
             }
 
             var pawnGenHook = request.KindDef.race.GetModExtension<PawnGeneratorRaceHook>();
@@ -127,6 +281,11 @@ namespace RPEF
             }
 
             return true;
+        }
+
+        private static void PawnGenerator_GeneratePawn_Finalizer(int __state)
+        {
+            generatePawnDepth = __state;
         }
 
         public static void LazyPatchRace(Harmony harmony)

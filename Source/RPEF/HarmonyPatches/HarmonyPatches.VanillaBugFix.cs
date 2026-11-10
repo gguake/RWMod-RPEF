@@ -13,7 +13,8 @@ namespace RPEF
     {
         public static void PatchVanillaBugFix(Harmony harmony)
         {
-            var goToChairInitAction = typeof(JobDriver_FeedBaby).GetNestedTypes(BindingFlags.NonPublic)
+            var goToChairInitAction = typeof(JobDriver_FeedBaby)
+                .GetNestedTypes(BindingFlags.NonPublic)
                 .SelectMany(v => v.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
                 .FirstOrDefault(v => v.Name.Contains("<GoToChair>"));
             if (goToChairInitAction == null)

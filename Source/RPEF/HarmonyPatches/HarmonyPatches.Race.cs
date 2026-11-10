@@ -14,11 +14,60 @@ namespace RPEF
     {
         private static void PatchRace(Harmony harmony)
         {
-            harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GeneratePawn), new Type[] { typeof(PawnGenerationRequest) }),
-                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Prefix)),
-                finalizer: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Finalizer)));
+            #region 폰 종류 교체 허용 범위
+            {
+                harmony.Patch(AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GeneratePawn), new Type[] { typeof(PawnGenerationRequest) }),
+                    prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Prefix)),
+                    finalizer: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GeneratePawn_Finalizer)));
 
-            PatchPawnKindReplaceScopes(harmony);
+                PatchPawnKindReplaceScope(harmony,
+                    AccessTools.DeclaredMethod(
+                        typeof(PrisonerWillingToJoinQuestUtility), 
+                        nameof(PrisonerWillingToJoinQuestUtility.GeneratePrisoner), 
+                        new Type[] { typeof(PlanetTile), typeof(Faction) }),
+                    "PrisonerWillingToJoinQuestUtility.GeneratePrisoner");
+
+                PatchPawnKindReplaceScope(harmony,
+                    AccessTools.DeclaredMethod(typeof(RimWorld.QuestGen.QuestNode_Root_Hospitality_Refugee), "RunInt"),
+                    "QuestNode_Root_Hospitality_Refugee.RunInt");
+
+                PatchPawnKindReplaceScope(harmony,
+                    AccessTools.DeclaredMethod(
+                        typeof(RimWorld.QuestGen.QuestNode_Root_WandererJoinAbasia), 
+                        nameof(RimWorld.QuestGen.QuestNode_Root_WandererJoinAbasia.GeneratePawn_NewTemp), 
+                        new Type[] { typeof(Map) }),
+                    "QuestNode_Root_WandererJoinAbasia.GeneratePawn_NewTemp");
+
+                PatchPawnKindReplaceScope(harmony,
+                    AccessTools.DeclaredMethod(
+                        typeof(ThingSetMaker_MapGen_AncientPodContents), 
+                        "GenerateSlave_NewTemp", 
+                        new Type[] { typeof(ThingSetMakerParams) }),
+                    "ThingSetMaker_MapGen_AncientPodContents.GenerateSlave_NewTemp");
+
+                PatchPawnKindReplaceScope(harmony,
+                    AccessTools.DeclaredMethod(
+                        typeof(RimWorld.BaseGen.SymbolResolver_TerrorBuildings), 
+                        "SpawnBuildings", 
+                        new Type[]
+                        {
+                            typeof(List<IntVec3>), typeof(int), typeof(Map), typeof(RimWorld.BaseGen.ResolveParams), typeof(List<IntVec3>), typeof(List<ThingDef>),
+                        }),
+                    "SymbolResolver_TerrorBuildings.SpawnBuildings");
+
+                // 지연 열거자라 호출 시점이 아니라 MoveNext 안에서 폰이 만들어진다. 결과를 감싸 MoveNext 동안만 허용한다.
+                var slaveStockMethod = AccessTools.DeclaredMethod(typeof(StockGenerator_Slaves), nameof(StockGenerator_Slaves.GenerateThings), new Type[] { typeof(PlanetTile), typeof(Faction) });
+                if (slaveStockMethod != null)
+                {
+                    harmony.Patch(slaveStockMethod,
+                        postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(StockGenerator_Slaves_GenerateThings_Postfix)));
+                }
+                else
+                {
+                    Log.Warning("[RPEF] Failed to find StockGenerator_Slaves.GenerateThings for pawn kind replace scope");
+                }
+            }
+            #endregion
 
             harmony.Patch(AccessTools.Method(typeof(PawnGenerator), "GenerateGenes"),
                 prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnGenerator_GenerateGenes_Prefix)));
@@ -98,44 +147,6 @@ namespace RPEF
         // GeneratePawn 중첩 깊이. 친척 생성처럼 GeneratePawn 안에서 다시 부르는 생성은 교체하지 않는다.
         [ThreadStatic]
         private static int generatePawnDepth;
-
-        private static void PatchPawnKindReplaceScopes(Harmony harmony)
-        {
-            PatchPawnKindReplaceScope(harmony,
-                AccessTools.DeclaredMethod(typeof(PrisonerWillingToJoinQuestUtility), nameof(PrisonerWillingToJoinQuestUtility.GeneratePrisoner), new Type[] { typeof(PlanetTile), typeof(Faction) }),
-                "PrisonerWillingToJoinQuestUtility.GeneratePrisoner");
-
-            PatchPawnKindReplaceScope(harmony,
-                AccessTools.DeclaredMethod(typeof(RimWorld.QuestGen.QuestNode_Root_Hospitality_Refugee), "RunInt"),
-                "QuestNode_Root_Hospitality_Refugee.RunInt");
-
-            PatchPawnKindReplaceScope(harmony,
-                AccessTools.DeclaredMethod(typeof(RimWorld.QuestGen.QuestNode_Root_WandererJoinAbasia), nameof(RimWorld.QuestGen.QuestNode_Root_WandererJoinAbasia.GeneratePawn_NewTemp), new Type[] { typeof(Map) }),
-                "QuestNode_Root_WandererJoinAbasia.GeneratePawn_NewTemp");
-
-            PatchPawnKindReplaceScope(harmony,
-                AccessTools.DeclaredMethod(typeof(ThingSetMaker_MapGen_AncientPodContents), "GenerateSlave_NewTemp", new Type[] { typeof(ThingSetMakerParams) }),
-                "ThingSetMaker_MapGen_AncientPodContents.GenerateSlave_NewTemp");
-
-            PatchPawnKindReplaceScope(harmony,
-                AccessTools.DeclaredMethod(typeof(RimWorld.BaseGen.SymbolResolver_TerrorBuildings), "SpawnBuildings", new Type[]
-                {
-                    typeof(List<IntVec3>), typeof(int), typeof(Map), typeof(RimWorld.BaseGen.ResolveParams), typeof(List<IntVec3>), typeof(List<ThingDef>),
-                }),
-                "SymbolResolver_TerrorBuildings.SpawnBuildings");
-
-            // 지연 열거자라 호출 시점이 아니라 MoveNext 안에서 폰이 만들어진다. 결과를 감싸 MoveNext 동안만 허용한다.
-            var slaveStockMethod = AccessTools.DeclaredMethod(typeof(StockGenerator_Slaves), nameof(StockGenerator_Slaves.GenerateThings), new Type[] { typeof(PlanetTile), typeof(Faction) });
-            if (slaveStockMethod != null)
-            {
-                harmony.Patch(slaveStockMethod,
-                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(StockGenerator_Slaves_GenerateThings_Postfix)));
-            }
-            else
-            {
-                Log.Warning("[RPEF] Failed to find StockGenerator_Slaves.GenerateThings for pawn kind replace scope");
-            }
-        }
 
         private static void PatchPawnKindReplaceScope(Harmony harmony, MethodInfo method, string methodName)
         {
@@ -586,6 +597,9 @@ namespace RPEF
 
         public class CompStatueRPEFInfo : IExposable
         {
+            private static readonly AccessTools.FieldRef<CompStatue, Dictionary<string, object>> CompStatue_additionalSavedPawnDataForMods =
+                AccessTools.FieldRefAccess<CompStatue, Dictionary<string, object>>("additionalSavedPawnDataForMods");
+            
             public ThingDef thingDef;
             public PawnKindDef pawnKindDef;
 
@@ -594,12 +608,20 @@ namespace RPEF
                 Scribe_Defs.Look(ref thingDef, "thingDef");
                 Scribe_Defs.Look(ref pawnKindDef, "pawnKindDef");
             }
+
+            public static CompStatueRPEFInfo Get(CompStatue statue)
+            {
+                var data = CompStatue_additionalSavedPawnDataForMods(statue);
+                if (data != null && data.TryGetValue(CompStatueDictKey, out var value))
+                {
+                    return value as CompStatueRPEFInfo;
+                }
+
+                return null;
+            }
         }
 
         private const string CompStatueDictKey = "_RPEF_StatueInfo";
-
-        private static readonly AccessTools.FieldRef<CompStatue, Dictionary<string, object>> CompStatue_additionalSavedPawnDataForMods =
-            AccessTools.FieldRefAccess<CompStatue, Dictionary<string, object>>("additionalSavedPawnDataForMods");
 
         private static void CompStatue_CreateSnapshotOfPawn_HookForMods_Postfix(Pawn p, Dictionary<string, object> dictToStoreDataIn)
         {
@@ -612,25 +634,14 @@ namespace RPEF
             };
         }
 
-        private static CompStatueRPEFInfo GetCompStatueRPEFInfo(CompStatue statue)
-        {
-            var data = CompStatue_additionalSavedPawnDataForMods(statue);
-            if (data != null && data.TryGetValue(CompStatueDictKey, out var value))
-            {
-                return value as CompStatueRPEFInfo;
-            }
-
-            return null;
-        }
-
         private static ThingDef CompStatue_InitFakePawn_ThingDef_Injection(ThingDef thingDef, CompStatue statue)
         {
-            return GetCompStatueRPEFInfo(statue)?.thingDef ?? thingDef;
+            return CompStatueRPEFInfo.Get(statue)?.thingDef ?? thingDef;
         }
 
         private static PawnKindDef CompStatue_InitFakePawn_PawnKindDef_Injection(PawnKindDef pawnKindDef, CompStatue statue)
         {
-            return GetCompStatueRPEFInfo(statue)?.pawnKindDef ?? pawnKindDef;
+            return CompStatueRPEFInfo.Get(statue)?.pawnKindDef ?? pawnKindDef;
         }
 
         private static IEnumerable<CodeInstruction> CompStatue_InitFakePawn_Transpiler(IEnumerable<CodeInstruction> codeInstructions)

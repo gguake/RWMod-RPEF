@@ -98,6 +98,7 @@
     <Compile Include="RenderNode\PawnRenderSubWorker_LifeStageBodySizeFactor.cs" />
     <Compile Include="RPEFMod.cs" />
     <Compile Include="ThinkNode\ThinkNode_ConditionalRace.cs" />
+    <Compile Include="ThinkNode\ThinkNode_SharedLordDuty.cs" />
     <Compile Include="ShootExt\Bullet_Split.cs" />
     <Compile Include="ShootExt\Verb_ShootWithMode.cs" />
   </ItemGroup>

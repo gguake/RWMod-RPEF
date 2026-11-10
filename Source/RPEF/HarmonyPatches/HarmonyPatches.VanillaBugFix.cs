@@ -13,6 +13,14 @@ namespace RPEF
     {
         public static void PatchVanillaBugFix(Harmony harmony)
         {
+            harmony.Patch(
+                original: AccessTools.PropertyGetter(typeof(ChoiceLetter_BabyToChild), nameof(ChoiceLetter_BabyToChild.CanShowInLetterStack)),
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(ChoiceLetter_BabyToChild_CanShowInLetterStack_Prefix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Pawn_FlightTracker), nameof(Pawn_FlightTracker.Notify_JobStarted)),
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_FlightTracker_Notify_JobStarted_Prefix)));
+
             var goToChairInitAction = typeof(JobDriver_FeedBaby)
                 .GetNestedTypes(BindingFlags.NonPublic)
                 .SelectMany(v => v.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
@@ -26,6 +34,24 @@ namespace RPEF
             harmony.Patch(
                 original: goToChairInitAction,
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(JobDriver_FeedBaby_GoToChair_Transpiler)));
+        }
+
+        // 아기→어린이 편지의 폰이 사라진 경우(파괴·세이브 참조 소실) 편지 목록 표시에서 null 참조 오류가 난다.
+        private static bool ChoiceLetter_BabyToChild_CanShowInLetterStack_Prefix(ref bool __result, Pawn ___pawn)
+        {
+            if (___pawn == null)
+            {
+                __result = false;
+                return false;
+            }
+
+            return true;
+        }
+
+        // 작업 정의가 없는 작업으로 Notify_JobStarted가 불리면 비행 추적기가 job.def에서 null 참조 오류를 낸다.
+        private static bool Pawn_FlightTracker_Notify_JobStarted_Prefix(Job job)
+        {
+            return job?.def != null;
         }
 
         // 바닐라 아기 먹이기는 의자가 없으면 RCellFinder.SpotToStandDuringJob으로 설 자리를 고르고 바로 ReserveSittableOrSpot으로 예약한다.

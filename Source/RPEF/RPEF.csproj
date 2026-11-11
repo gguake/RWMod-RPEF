@@ -83,6 +83,7 @@
     <Compile Include="ModExtensions\Hook\PawnGeneratorRaceHook.cs" />
     <Compile Include="ModExtensions\Hook\RecipeBillHook.cs" />
     <Compile Include="ModExtensions\Hook\SleepFaceHeadHook.cs" />
+    <Compile Include="ModExtensions\HairScaleExtension.cs" />
     <Compile Include="ModExtensions\HumanlikeFlyExtension.cs" />
     <Compile Include="ModExtensions\RaceExtension.cs" />
     <Compile Include="ModExtensions\SplitProjectileExtension.cs" />

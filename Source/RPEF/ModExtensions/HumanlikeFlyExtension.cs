@@ -1,47 +1,28 @@
 using RimWorld;
 using System.Collections.Generic;
-using System.Xml;
 using Verse;
 
 namespace RPEF
 {
-    public class HumanlikeFlyAnimationData
-    {
-        public LifeStageDef lifeStage;
-        public AnimationDef animationSouth;
-        public AnimationDef animationNorth;
-        public AnimationDef animationEast;
-        public AnimationDef animationWest;
-
-        public void LoadDataFromXmlCustom(XmlNode xmlRoot)
-        {
-            XmlHelper.ParseElements(this, xmlRoot, "lifeStage");
-        }
-    }
-
     /// <summary>
     /// 비행하는 Humanlike Pawn을 구현하기 위한 Extension
+    /// 비행 가능 여부와 애니메이션은 생애 단계가 아니라 생물학적 나이로 판단
+    /// (다른 모드가 생애 단계를 바꿔 넣어도 영향을 받지 않도록)
     /// </summary>
     public class HumanlikeFlyExtension : DefModExtension
     {
-        public HumanlikeFlyAnimationData GetAnimationData(LifeStageDef def)
-        {
-            if (!_dictLifestageAnimationData.TryGetValue(def, out var data))
-            {
-                data = animationData.FirstOrDefault(v => v.lifeStage == def);
-                _dictLifestageAnimationData.Add(def, data);
-            }
-
-            return data;
-        }
-
-        [Unsaved]
-        private Dictionary<LifeStageDef, HumanlikeFlyAnimationData> _dictLifestageAnimationData = new Dictionary<LifeStageDef, HumanlikeFlyAnimationData>();
+        /// <summary>
+        /// 비행 가능한 최소 생물학적 나이
+        /// </summary>
+        public float minAge;
 
         /// <summary>
         /// 비행시 재생할 애니메이션
         /// </summary>
-        public List<HumanlikeFlyAnimationData> animationData;
+        public AnimationDef animationSouth;
+        public AnimationDef animationNorth;
+        public AnimationDef animationEast;
+        public AnimationDef animationWest;
 
         /// <summary>
         /// Bodypart가 요구되는지
@@ -53,17 +34,17 @@ namespace RPEF
         /// </summary>
         public bool alwaysFlyIfDrafted;
 
-        public override void ResolveReferences(Def parentDef)
+        public AnimationDef GetAnimation(Rot4 rot)
         {
-            _dictLifestageAnimationData.Clear();
+            if (rot == Rot4.South) { return animationSouth; }
+            if (rot == Rot4.North) { return animationNorth; }
+            if (rot == Rot4.East) { return animationEast; }
+            return animationWest;
         }
 
         public bool CheckCanEverFly(Pawn pawn)
         {
-            var lifeStageDef = pawn.ageTracker?.CurLifeStage;
-            if (lifeStageDef == null) { return false; }
-
-            if (GetAnimationData(lifeStageDef) == null) { return false; }
+            if (pawn.ageTracker == null || pawn.ageTracker.AgeBiologicalYearsFloat < minAge) { return false; }
 
             if (requireBodyParts != null)
             {

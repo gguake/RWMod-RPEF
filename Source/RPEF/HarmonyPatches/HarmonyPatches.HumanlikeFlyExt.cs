@@ -28,33 +28,7 @@ namespace RPEF
 
         private static AnimationDef Pawn_FlightTracker_GetBestFlyAnimation_Injection(Pawn pawn)
         {
-            var modExtension = pawn.def.GetModExtension<HumanlikeFlyExtension>();
-            if (modExtension != null)
-            {
-                var data = modExtension.GetAnimationData(pawn.ageTracker.CurLifeStage);
-                if (data != null)
-                {
-                    var rot = pawn.Rotation;
-                    if (rot == Rot4.South)
-                    {
-                        return data.animationSouth;
-                    }
-                    else if (rot == Rot4.North)
-                    {
-                        return data.animationNorth;
-                    }
-                    else if (rot == Rot4.East)
-                    {
-                        return data.animationEast;
-                    }
-                    else
-                    {
-                        return data.animationWest;
-                    }
-                }
-            }
-
-            return null;
+            return pawn.def.GetModExtension<HumanlikeFlyExtension>()?.GetAnimation(pawn.Rotation);
         }
 
         private static IEnumerable<CodeInstruction> Pawn_FlightTracker_GetBestFlyAnimation_Transpiler(IEnumerable<CodeInstruction> codeInstructions)

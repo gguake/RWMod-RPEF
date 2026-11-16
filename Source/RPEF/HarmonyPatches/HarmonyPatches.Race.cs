@@ -106,6 +106,10 @@ namespace RPEF
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(InteractionWorker_RomanceAttempt_SuccessChance_Postfix)));
 
             harmony.Patch(
+                original: AccessTools.Method(typeof(PawnRelationWorker_Sibling), nameof(PawnRelationWorker_Sibling.InRelation)),
+                postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PawnRelationWorker_Sibling_InRelation_Postfix)));
+
+            harmony.Patch(
                 original: AccessTools.Method(typeof(StunHandler), "CanBeStunnedByDamage"),
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(StunHandler_CanBeStunnedByDamage_Postfix)));
 
@@ -565,6 +569,21 @@ namespace RPEF
                     __result *= recipientExt.romanceSuccessChanceMultiplierAsRecipient;
                 }
             }
+        }
+
+        private static void PawnRelationWorker_Sibling_InRelation_Postfix(ref bool __result, Pawn me, Pawn other)
+        {
+            if (__result || me == null || other == null || me == other) { return; }
+
+            var rule = me.def.GetModExtension<RaceExtension>()?.siblingParentRule ?? SiblingParentRule.Both;
+            if (rule == SiblingParentRule.Both) { return; }
+
+            var otherRule = other.def.GetModExtension<RaceExtension>()?.siblingParentRule ?? SiblingParentRule.Both;
+            if (otherRule != rule) { return; }
+
+            var parent = rule == SiblingParentRule.Mother ? me.GetMother() : me.GetFather();
+            var otherParent = rule == SiblingParentRule.Mother ? other.GetMother() : other.GetFather();
+            __result = parent != null && parent == otherParent;
         }
 
         public static void StunHandler_CanBeStunnedByDamage_Postfix(StunHandler __instance, DamageDef def, ref bool __result)

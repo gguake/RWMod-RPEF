@@ -21,6 +21,24 @@ namespace RPEF
         }
     }
 
+    public enum SiblingParentRule : byte
+    {
+        /// <summary>
+        /// 바닐라: 어머니와 아버지가 모두 같아야 형제
+        /// </summary>
+        Both,
+
+        /// <summary>
+        /// 어머니만 같으면 형제
+        /// </summary>
+        Mother,
+
+        /// <summary>
+        /// 아버지만 같으면 형제
+        /// </summary>
+        Father,
+    }
+
     public class RaceExtension : DefModExtension
     {
         /// <summary>
@@ -93,5 +111,10 @@ namespace RPEF
         /// 해당 Race가 고백을 받을때 성공률 가중치
         /// </summary>
         public float romanceSuccessChanceMultiplierAsRecipient = 1f;
+
+        /// <summary>
+        /// 형제 판정에 쓰는 부모. 두 폰의 Race가 같은 값을 가질 때만 적용
+        /// </summary>
+        public SiblingParentRule siblingParentRule = SiblingParentRule.Both;
     }
 }

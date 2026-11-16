@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="RenderNode\PawnRenderNodeWorker_SleepFace.cs" />
     <Compile Include="ShootExt\CompEquippableVerbMode.cs" />
+    <Compile Include="Comps\CompAbility_RequiresBodyPart.cs" />
     <Compile Include="Comps\CompTrailRenderer.cs" />
     <Compile Include="Comps\MapComponent_Trails.cs" />
     <Compile Include="Comps\RibbonMeshGenerator.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="Constraints\ConstraintDef.cs" />
     <Compile Include="Constraints\Implementations\BackstoryConstraint.cs" />
     <Compile Include="Constraints\Implementations\BodyTypeConstraint.cs" />
+    <Compile Include="Constraints\Implementations\GeneConstraint.cs" />
     <Compile Include="Constraints\Implementations\HeadTypeConstraint.cs" />
     <Compile Include="Constraints\Implementations\HediffConstraint.cs" />
     <Compile Include="Constraints\Implementations\RecipeConstraint.cs" />
@@ -66,6 +68,7 @@
     <Compile Include="Constraints\Implementations\TraitConstraint.cs" />
     <Compile Include="Constraints\Implementations\XenotypeConstraint.cs" />
     <Compile Include="Constraints\ConstraintExtension.cs" />
+    <Compile Include="Graphics\Graphic_MoteTiled.cs" />
     <Compile Include="ScaleableHairDef.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.cs" />
     <Compile Include="HarmonyPatches\HarmonyPatches.HumanlikeFlyExt.cs" />

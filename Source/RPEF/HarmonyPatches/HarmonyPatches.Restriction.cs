@@ -79,6 +79,10 @@ namespace RPEF
             harmony.Patch(
                 original: AccessTools.Method(typeof(Pawn_GeneTracker), "Notify_GenesChanged"),
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_GeneTracker_Notify_GenesChanged_Postfix)));
+
+            harmony.Patch(
+                original: AccessTools.Method(typeof(Pawn_GeneTracker), nameof(Pawn_GeneTracker.AddGene), new Type[] { typeof(GeneDef), typeof(bool) }),
+                prefix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_GeneTracker_AddGene_Prefix)));
         }
 
         public static void LazyPatchRestrictions(Harmony harmony)
@@ -442,6 +446,17 @@ namespace RPEF
         private static void Pawn_GeneTracker_Notify_GenesChanged_Postfix(Pawn ___pawn)
         {
             ___pawn.apparel?.DropAllOrMoveAllToInventory((Apparel apparel) => !apparel.PawnCanWear(___pawn));
+        }
+
+        private static bool Pawn_GeneTracker_AddGene_Prefix(ref Gene __result, Pawn ___pawn, GeneDef geneDef)
+        {
+            if (___pawn != null && geneDef != null && !geneDef.CheckAllConstraints(___pawn, out _))
+            {
+                __result = null;
+                return false;
+            }
+
+            return true;
         }
         #endregion
 

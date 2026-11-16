@@ -30,8 +30,12 @@ namespace RPEF
         {
             if (pawn == null) { return false; }
 
+            // 동물·메카노이드 등 story가 없는 폰은 특성이 없으므로 일치하지 않는 것으로 본다.
+            var traits = pawn.story?.traits?.allTraits;
+            if (traits == null) { return false; }
+
             var traitDefs = TraitDefs;
-            foreach (var trait in pawn.story.traits.allTraits)
+            foreach (var trait in traits)
             {
                 if (traitDefs.Contains(trait.def))
                 {

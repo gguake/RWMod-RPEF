@@ -82,11 +82,19 @@ namespace RPEF
         {
             if (pawn == null) { return false; }
 
+            // 동물·메카노이드 등 story/style이 없는 폰은 해당 스타일이 없으므로 일치하지 않는 것으로 본다.
             var styleItemDefs = StyleItemDefs;
-            if (styleItemDefs.Contains(pawn.story.hairDef)) { return true; }
-            if (styleItemDefs.Contains(pawn.style.beardDef)) { return true; }
-            if (styleItemDefs.Contains(pawn.style.BodyTattoo)) { return true; }
-            if (styleItemDefs.Contains(pawn.style.FaceTattoo)) { return true; }
+            if (pawn.story != null)
+            {
+                if (styleItemDefs.Contains(pawn.story.hairDef)) { return true; }
+            }
+
+            if (pawn.style != null)
+            {
+                if (styleItemDefs.Contains(pawn.style.beardDef)) { return true; }
+                if (styleItemDefs.Contains(pawn.style.BodyTattoo)) { return true; }
+                if (styleItemDefs.Contains(pawn.style.FaceTattoo)) { return true; }
+            }
 
             return false;
         }

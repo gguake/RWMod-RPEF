@@ -17,6 +17,17 @@ namespace RPEF
             harmony.Patch(AccessTools.Method(typeof(PlayDataLoader), "ResetStaticDataPost"),
                 postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(PlayDataLoader_ResetStaticDataPost_Postfix)));
 
+            var gameConstructor = AccessTools.Constructor(typeof(Game), Type.EmptyTypes);
+            if (gameConstructor != null)
+            {
+                harmony.Patch(gameConstructor,
+                    postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(Game_Constructor_Postfix)));
+            }
+            else
+            {
+                Log.Warning("[RPEF] Failed to find Game constructor for pawn constraint cache reset");
+            }
+
             harmony.Patch(AccessTools.Method(typeof(Pawn_StoryTracker), "TryGetRandomHeadFromSet"),
                 transpiler: new HarmonyMethod(typeof(HarmonyPatches), nameof(Pawn_StoryTracker_TryGetRandomHeadFromSet_Transpiler)));
             harmony.Patch(__Pawn_StoryTracker_TryGetRandomHeadFromSet_CanUseHeadType,
@@ -115,6 +126,12 @@ namespace RPEF
         private static void PlayDataLoader_ResetStaticDataPost_Postfix()
         {
             ConstraintExtension.ClearCache();
+        }
+
+        // 새 게임 시작·세이브 로드로 Game이 교체되면 thingIDNumber가 다시 발급되므로 폰 캐시를 비운다.
+        private static void Game_Constructor_Postfix()
+        {
+            ConstraintExtension.ClearPawnCache();
         }
 
         #region EarlyPatch

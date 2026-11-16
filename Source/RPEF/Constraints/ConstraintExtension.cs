@@ -15,8 +15,17 @@ namespace RPEF
         public static void ClearCache()
         {
             _defConstraintCache.Clear();
-            _pawnConstraintCache.Clear();
             _defPairFailConstraintCache.Clear();
+            ClearPawnCache();
+        }
+
+        /// <summary>
+        /// 폰 캐시의 키는 thingIDNumber라서 Game이 교체되면 다른 폰이 같은 키를 다시 받는다.
+        /// 틱이 0에 머무는 새 게임 준비 단계에서는 틱 비교만으로 비워지지 않으므로 Game 생성 시 직접 비운다.
+        /// </summary>
+        public static void ClearPawnCache()
+        {
+            _pawnConstraintCache.Clear();
             _lastPawnCacheRefreshTicks = 0;
         }
 
